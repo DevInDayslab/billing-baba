@@ -2,6 +2,7 @@ import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/features/collaboration/application/navigation_permission_registry.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service.dart';
 import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
+import 'package:billing_baba/features/other_products/models/other_product_sub_route.dart';
 import 'package:billing_baba/features/parties/models/party_sub_route.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
@@ -99,10 +100,32 @@ abstract final class SearchRegistry {
         subtitle: 'Point of Sale',
         icon: Icons.point_of_sale_outlined,
         category: SearchCategory.page,
-        route: AppRoutes.pos,
-        keywords: ['pos', 'point', 'sale', 'retail'],
+        route: AppRoutes.saleScreen,
+        keywords: ['pos', 'point', 'sale', 'retail', 'sale screen', 'counter'],
       ),
     ...PurchaseSubRoutes.items.map(_pageFromPurchaseSubRoute),
+    const SearchItem(
+      id: 'page_other_products',
+      title: 'Other Products',
+      subtitle: 'CRM and more',
+      icon: Icons.widgets_outlined,
+      category: SearchCategory.page,
+      route: AppRoutes.otherProducts,
+      keywords: ['other', 'products', 'crm', 'modules'],
+    ),
+    ...OtherProductSubRoutes.items.map(_pageFromOtherProductSubRoute),
+    _pageFromOtherProductSubRoute(
+      const OtherProductSubRoute(
+        route: AppRoutes.saleCashAndBank,
+        label: 'Cash & Bank',
+      ),
+    ),
+    _pageFromOtherProductSubRoute(
+      const OtherProductSubRoute(
+        route: AppRoutes.loanAccounts,
+        label: 'Loan Accounts',
+      ),
+    ),
     const SearchItem(
       id: 'page_reports',
       title: 'Reports',
@@ -173,15 +196,6 @@ abstract final class SearchRegistry {
       category: SearchCategory.page,
       route: AppRoutes.plansPricing,
       keywords: ['subscription', 'plans', 'pricing', 'premium'],
-    ),
-    const SearchItem(
-      id: 'page_sale_screen',
-      title: 'Sale Screen',
-      subtitle: 'Fast counter billing',
-      icon: Icons.grid_view_outlined,
-      category: SearchCategory.page,
-      route: AppRoutes.saleScreen,
-      keywords: ['sale screen', 'pos', 'counter', 'billing', 'checkout'],
     ),
   ];
 
@@ -415,6 +429,29 @@ abstract final class SearchRegistry {
           'out',
         ],
         if (route.route == AppRoutes.purchaseExpenses) ...const ['expense'],
+      ],
+    );
+  }
+
+  static SearchItem _pageFromOtherProductSubRoute(OtherProductSubRoute route) {
+    return SearchItem(
+      id: 'page_${route.route.replaceAll('/', '_')}',
+      title: route.label,
+      subtitle: 'Other Products',
+      icon: Icons.widgets_outlined,
+      category: SearchCategory.page,
+      route: route.route,
+      keywords: [
+        ..._keywordsForLabel(route.label),
+        'other',
+        'products',
+        if (route.route == AppRoutes.otherIncome) ...const ['income'],
+        if (route.route == AppRoutes.saleCashAndBank) ...const [
+          'cash',
+          'bank',
+          'account',
+        ],
+        if (route.route == AppRoutes.loanAccounts) ...const ['loan'],
       ],
     );
   }

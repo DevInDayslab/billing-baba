@@ -33,7 +33,7 @@ final class TaxRatesProvider
   TaxRates create() => TaxRates();
 }
 
-String _$taxRatesHash() => r'86bc1e8ae1eb80a07af97b38685caa37c1571d16';
+String _$taxRatesHash() => r'00d2d4725772d9dcc833935531359fff5f4c5101';
 
 abstract class _$TaxRates extends $AsyncNotifier<List<TaxRateDto>> {
   FutureOr<List<TaxRateDto>> build();

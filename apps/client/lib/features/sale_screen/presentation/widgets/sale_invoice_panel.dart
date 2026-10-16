@@ -7,11 +7,16 @@ import 'package:billing_baba/features/parties/utils/walk_in_party.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/sales/utils/sale_price_input.dart';
 import 'package:billing_baba/features/sale_screen/application/sale_invoice_focus_provider.dart';
+import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_screen_alternative_replace_dialog.dart';
+import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_screen_price_increment_dialog.dart';
 import 'package:billing_baba/features/pos/models/cart_item.dart';
 import 'package:billing_baba/features/pos/pos_constants.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_item_thumbnail.dart';
+import 'package:billing_baba/features/pos/presentation/desktop/widgets/hold_bills_panel.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
+import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_invoice_party_ledger_chips.dart';
+import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_screen_share_bill_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +30,9 @@ final _money = NumberFormat.currency(
 
 final _dateFormat = DateFormat('dd-MM-yyyy');
 final _timeFormat = DateFormat('hh:mm a');
+
+const _lineSelectColumnWidth = 40.0;
+const _lineMenuColumnWidth = 36.0;
 
 class SaleInvoicePanel extends ConsumerWidget {
   const SaleInvoicePanel({
@@ -47,34 +55,47 @@ class SaleInvoicePanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(posCartProvider(sessionKey: cartSessionKey));
+    final heldBills = cart.heldBills;
     final parties = ref.watch(partyPickerListProvider);
     final now = DateTime.now();
     final textTheme = Theme.of(context).textTheme;
 
-    final invoiceBody = Column(
+    final invoiceHeader = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Invoice No.',
+                  style: textTheme.labelMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  'Auto',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Invoice No.',
-                    style: textTheme.labelMedium?.copyWith(
-                      color: AppColors.textSecondary,
+              child: heldBills.isEmpty
+                  ? const SizedBox.shrink()
+                  : Center(
+                      child: _InvoiceHeldBillsChip(
+                        count: heldBills.length,
+                        onTap: () => HoldBillsPanel.show(
+                          context,
+                          cartSessionKey: cartSessionKey,
+                        ),
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Auto',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -112,29 +133,20 @@ class SaleInvoicePanel extends ConsumerWidget {
                 .setCustomerName(name);
           },
         ),
-        const SizedBox(height: AppSpacing.md),
-        const Divider(height: 1, color: posCardBorder),
-        _LineHeader(textTheme: textTheme),
-        const Divider(height: 1, color: posCardBorder),
-        if (cart.items.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-            child: Text(
-              'Search a product and press Enter',
-              style: PosStyles.emptyStateStyle,
-              textAlign: TextAlign.center,
-            ),
-          )
-        else
-          for (final line in cart.items) ...[
-            _InvoiceLine(
-              key: ValueKey(line.item.id),
-              cartSessionKey: cartSessionKey,
-              line: line,
-            ),
-            const Divider(height: 1, color: posCardBorder),
-          ],
+        parties.maybeWhen(
+          data: (list) => SaleInvoicePartyLedgerChips(
+            parties: list,
+            customerName: cart.customerName,
+          ),
+          orElse: () => const SizedBox.shrink(),
+        ),
+        const SizedBox(height: AppSpacing.sm),
       ],
+    );
+
+    final invoiceLines = _SaleInvoiceItemsTable(
+      cartSessionKey: cartSessionKey,
+      textTheme: textTheme,
     );
 
     final invoiceFooter = Column(
@@ -169,46 +181,43 @@ class SaleInvoicePanel extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final stackActions = constraints.maxWidth < PosBreakpoints.mobile;
-            final hold = OutlinedButton.icon(
-              onPressed: cart.items.isEmpty ? null : onHold,
-              icon: const Icon(Icons.pause_circle_outline),
-              label: const Text('Hold'),
-            );
-            final clear = OutlinedButton.icon(
-              onPressed: cart.items.isEmpty ? null : onClear,
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('Clear'),
-            );
-            final print = OutlinedButton.icon(
-              onPressed: cart.items.isEmpty ? null : onPrint,
-              icon: const Icon(Icons.print_outlined),
-              label: const Text('Print'),
-            );
-            if (stackActions) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  hold,
-                  const SizedBox(height: AppSpacing.sm),
-                  clear,
-                  const SizedBox(height: AppSpacing.sm),
-                  print,
-                ],
-              );
-            }
-            return Row(
-              children: [
-                Expanded(child: hold),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(child: clear),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(child: print),
-              ],
-            );
-          },
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: cart.items.isEmpty ? null : onHold,
+                icon: const Icon(Icons.pause_circle_outline),
+                label: const Text('Hold'),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: cart.items.isEmpty ? null : onClear,
+                icon: const Icon(Icons.delete_outline),
+                label: const Text('Clear'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        OutlinedButton.icon(
+          onPressed: cart.items.isEmpty
+              ? null
+              : () => SaleScreenShareBillDialog.show(
+                  context,
+                  cartSessionKey: cartSessionKey,
+                ),
+          icon: const Icon(Icons.share_outlined, size: 18),
+          label: const Text('Share Bill'),
+          style: PosButtonStyles.primaryOutlined,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        OutlinedButton.icon(
+          onPressed: cart.items.isEmpty ? null : onPrint,
+          icon: const Icon(Icons.print_outlined),
+          label: const Text('Print'),
+          style: PosButtonStyles.primaryOutlined,
         ),
         const SizedBox(height: AppSpacing.sm),
         FilledButton.icon(
@@ -230,28 +239,71 @@ class SaleInvoicePanel extends ConsumerWidget {
         color: AppColors.surface,
         border: Border(left: BorderSide(color: posCardBorder)),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final inset = AppSpacing.lg * 2;
-          final minHeight = constraints.maxHeight > inset
-              ? constraints.maxHeight - inset
-              : 0.0;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: minHeight),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  invoiceBody,
-                  invoiceFooter,
-                ],
-              ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            invoiceHeader,
+            Expanded(child: invoiceLines),
+            invoiceFooter,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InvoiceHeldBillsChip extends StatelessWidget {
+  const _InvoiceHeldBillsChip({
+    required this.count,
+    required this.onTap,
+  });
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = count == 1 ? '1 bill on hold' : '$count bills on hold';
+
+    return Tooltip(
+      message: 'View held bills',
+      child: Material(
+        color: AppColors.background,
+        borderRadius: AppRadius.smBorder,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: AppRadius.smBorder,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: 6,
             ),
-          );
-        },
+            decoration: BoxDecoration(
+              borderRadius: AppRadius.smBorder,
+              border: Border.all(color: posCardBorder),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.pause_circle_outline,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -590,10 +642,174 @@ class _CustomerTile extends StatelessWidget {
   }
 }
 
+class _SaleInvoiceItemsTable extends ConsumerStatefulWidget {
+  const _SaleInvoiceItemsTable({
+    required this.cartSessionKey,
+    required this.textTheme,
+  });
+
+  final String cartSessionKey;
+  final TextTheme textTheme;
+
+  @override
+  ConsumerState<_SaleInvoiceItemsTable> createState() =>
+      _SaleInvoiceItemsTableState();
+}
+
+class _SaleInvoiceItemsTableState extends ConsumerState<_SaleInvoiceItemsTable> {
+  final Set<String> _selectedItemIds = {};
+
+  @override
+  void didUpdateWidget(covariant _SaleInvoiceItemsTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.cartSessionKey != widget.cartSessionKey) {
+      _selectedItemIds.clear();
+    }
+  }
+
+  bool? _selectAllValue(List<CartItem> items) {
+    if (items.isEmpty) return false;
+    var selectedCount = 0;
+    for (final line in items) {
+      if (_selectedItemIds.contains(line.item.id)) {
+        selectedCount += 1;
+      }
+    }
+    if (selectedCount == 0) return false;
+    if (selectedCount == items.length) return true;
+    return null;
+  }
+
+  void _toggleSelectAll(List<CartItem> items) {
+    final value = _selectAllValue(items);
+    setState(() {
+      if (value == true) {
+        _selectedItemIds.clear();
+      } else {
+        _selectedItemIds
+          ..clear()
+          ..addAll(items.map((line) => line.item.id));
+      }
+    });
+  }
+
+  void _toggleLine(String itemId, bool? selected) {
+    setState(() {
+      if (selected == true) {
+        _selectedItemIds.add(itemId);
+      } else {
+        _selectedItemIds.remove(itemId);
+      }
+    });
+  }
+
+  List<CartItem> _selectedLines(List<CartItem> items) => items
+      .where((line) => _selectedItemIds.contains(line.item.id))
+      .toList();
+
+  Future<void> _onColumnMenuSelected(
+    BuildContext context,
+    _InvoiceItemsColumnMenuAction action,
+    List<CartItem> items,
+  ) async {
+    final selectedLines = _selectedLines(items);
+    if (selectedLines.isEmpty) return;
+
+    switch (action) {
+      case _InvoiceItemsColumnMenuAction.alternativeItems:
+        await SaleScreenAlternativeReplaceDialog.show(
+          context,
+          cartSessionKey: widget.cartSessionKey,
+          lines: selectedLines,
+        );
+      case _InvoiceItemsColumnMenuAction.priceIncrement:
+        await SaleScreenPriceIncrementDialog.show(
+          context,
+          cartSessionKey: widget.cartSessionKey,
+          lines: selectedLines,
+        );
+    }
+
+    if (!context.mounted) return;
+    setState(_selectedItemIds.clear);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items =
+        ref.watch(posCartProvider(sessionKey: widget.cartSessionKey)).items;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Divider(height: 1, color: posCardBorder),
+        _LineHeader(
+          textTheme: widget.textTheme,
+          selectAllValue: _selectAllValue(items),
+          onSelectAllChanged: items.isEmpty
+              ? null
+              : (_) => _toggleSelectAll(items),
+          hasSelectedLines: _selectedItemIds.isNotEmpty,
+          onColumnMenuSelected: (action) =>
+              _onColumnMenuSelected(context, action, items),
+        ),
+        const Divider(height: 1, color: posCardBorder),
+        Expanded(
+          child: items.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.lg,
+                    ),
+                    child: Text(
+                      'Search a product and press Enter',
+                      style: PosStyles.emptyStateStyle,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+              : ListView.separated(
+                  padding: EdgeInsets.zero,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) =>
+                      const Divider(height: 1, color: posCardBorder),
+                  itemBuilder: (context, index) {
+                    final line = items[index];
+                    return _InvoiceLine(
+                      key: ValueKey(line.item.id),
+                      cartSessionKey: widget.cartSessionKey,
+                      line: line,
+                      isSelected: _selectedItemIds.contains(line.item.id),
+                      onSelectionChanged: (selected) =>
+                          _toggleLine(line.item.id, selected),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _InvoiceItemsColumnMenuAction {
+  alternativeItems,
+  priceIncrement,
+}
+
 class _LineHeader extends StatelessWidget {
-  const _LineHeader({required this.textTheme});
+  const _LineHeader({
+    required this.textTheme,
+    required this.selectAllValue,
+    required this.hasSelectedLines,
+    required this.onColumnMenuSelected,
+    this.onSelectAllChanged,
+  });
 
   final TextTheme textTheme;
+  final bool? selectAllValue;
+  final bool hasSelectedLines;
+  final ValueChanged<_InvoiceItemsColumnMenuAction> onColumnMenuSelected;
+  final ValueChanged<bool?>? onSelectAllChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -605,6 +821,19 @@ class _LineHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
+          SizedBox(
+            width: _lineSelectColumnWidth,
+            child: Tooltip(
+              message: 'Select all',
+              child: Checkbox(
+                tristate: true,
+                value: selectAllValue,
+                onChanged: onSelectAllChanged,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+          ),
           Expanded(flex: 5, child: Text('Item', style: style)),
           Expanded(flex: 2, child: Text('Qty', style: style)),
           Expanded(
@@ -613,7 +842,39 @@ class _LineHeader extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
-            child: Text('Amount', style: style, textAlign: TextAlign.end),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text('Amount', style: style, textAlign: TextAlign.end),
+            ),
+          ),
+          SizedBox(
+            width: _lineMenuColumnWidth,
+            child: hasSelectedLines
+                ? PopupMenuButton<_InvoiceItemsColumnMenuAction>(
+                    tooltip: 'Column actions',
+                    padding: EdgeInsets.zero,
+                    icon: Icon(
+                      Icons.more_vert,
+                      size: 18,
+                      color: AppColors.textSecondary,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: _lineMenuColumnWidth,
+                      minHeight: 28,
+                    ),
+                    onSelected: onColumnMenuSelected,
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: _InvoiceItemsColumnMenuAction.alternativeItems,
+                        child: Text('Alternative items'),
+                      ),
+                      const PopupMenuItem(
+                        value: _InvoiceItemsColumnMenuAction.priceIncrement,
+                        child: Text('Price increment'),
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
@@ -625,11 +886,15 @@ class _InvoiceLine extends ConsumerWidget {
   const _InvoiceLine({
     required this.cartSessionKey,
     required this.line,
+    required this.isSelected,
+    required this.onSelectionChanged,
     super.key,
   });
 
   final String cartSessionKey;
   final CartItem line;
+  final bool isSelected;
+  final ValueChanged<bool?> onSelectionChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -645,6 +910,15 @@ class _InvoiceLine extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
+          SizedBox(
+            width: _lineSelectColumnWidth,
+            child: Checkbox(
+              value: isSelected,
+              onChanged: onSelectionChanged,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            ),
+          ),
           Expanded(
             flex: 5,
             child: Row(
@@ -703,30 +977,15 @@ class _InvoiceLine extends ConsumerWidget {
           ),
           Expanded(
             flex: 3,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _money.format(line.lineTotal),
-                    textAlign: TextAlign.end,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Remove',
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => _confirmRemoveCartItem(
-                    context,
-                    itemName: line.item.name,
-                    onRemove: () => notifier.removeItem(line.item.id),
-                  ),
-                  icon: const Icon(Icons.close, size: 16),
-                ),
-              ],
+            child: Text(
+              _money.format(line.lineTotal),
+              textAlign: TextAlign.end,
+              style: textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
+          const SizedBox(width: _lineMenuColumnWidth),
         ],
       ),
     );
@@ -1050,37 +1309,5 @@ class _TotalRow extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-Future<void> _confirmRemoveCartItem(
-  BuildContext context, {
-  required String itemName,
-  required VoidCallback onRemove,
-}) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Remove item?'),
-      content: Text('Remove "$itemName" from this bill?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.error,
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Remove'),
-        ),
-      ],
-    ),
-  );
-
-  if (confirmed == true && context.mounted) {
-    onRemove();
   }
 }

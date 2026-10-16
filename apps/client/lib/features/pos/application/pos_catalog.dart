@@ -105,6 +105,20 @@ List<PosCategoryOption> posCategoriesForCatalog(
     ..sort((a, b) => a.name.compareTo(b.name));
 }
 
+/// In-stock products first; stable tie-break by name.
+List<PosItem> sortPosCatalogStockFirst(List<PosItem> items) {
+  final sorted = [...items];
+  sorted.sort((a, b) {
+    final aInStock = a.stock > 0;
+    final bInStock = b.stock > 0;
+    if (aInStock != bInStock) {
+      return aInStock ? -1 : 1;
+    }
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  });
+  return sorted;
+}
+
 /// Filters POS catalog using the same search engine as the inventory module.
 List<PosItem> filterPosCatalog({
   required List<PosItem> catalog,
@@ -128,7 +142,9 @@ List<PosItem> filterPosCatalog({
   }
 
   final query = searchQuery.trim();
-  if (query.isEmpty) return result.toList();
+  if (query.isEmpty) {
+    return sortPosCatalogStockFirst(result.toList());
+  }
 
   final barcodeMatch = findInventoryItemByExactBarcode(
     products,
@@ -136,7 +152,9 @@ List<PosItem> filterPosCatalog({
   );
   if (barcodeMatch != null) {
     final ids = {barcodeMatch.id};
-    return result.where((item) => ids.contains(item.id)).toList();
+    return sortPosCatalogStockFirst(
+      result.where((item) => ids.contains(item.id)).toList(),
+    );
   }
 
   final matchedIds = searchInventoryItems(
@@ -145,7 +163,9 @@ List<PosItem> filterPosCatalog({
     query: query,
   ).map((item) => item.id).toSet();
 
-  return result.where((item) => matchedIds.contains(item.id)).toList();
+  return sortPosCatalogStockFirst(
+    result.where((item) => matchedIds.contains(item.id)).toList(),
+  );
 }
 
 /// Resolves the latest POS item snapshot from cached inventory (for cart validation).

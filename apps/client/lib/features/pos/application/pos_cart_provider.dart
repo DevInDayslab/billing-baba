@@ -97,6 +97,9 @@ class PosCart extends _$PosCart {
     state = state.copyWith(heldBills: bills);
   }
 
+  /// Reload held bills from local storage (e.g. after resume/discard on another tab).
+  Future<void> refreshHeldBills() => _loadHeldBills();
+
   void addItem(PosItem item, {bool allowInsufficientStock = false}) {
     final live = _livePosItem(item) ?? item;
     final index = state.items.indexWhere((c) => c.item.id == live.id);
@@ -139,6 +142,24 @@ class PosCart extends _$PosCart {
     state = state.copyWith(
       items: state.items.where((c) => c.item.id != itemId).toList(),
     );
+    _syncSinglePaymentAmount();
+  }
+
+  /// Swaps a cart line's product while keeping qty, discount, and stock flags.
+  void replaceLineItem(String oldItemId, PosItem newItem) {
+    final index = state.items.indexWhere((c) => c.item.id == oldItemId);
+    if (index < 0) return;
+
+    final existing = state.items[index];
+    final live = _livePosItem(newItem) ?? newItem;
+    final updated = List<CartItem>.from(state.items);
+    updated[index] = CartItem(
+      item: live,
+      quantity: existing.quantity,
+      discountPercent: existing.discountPercent,
+      allowInsufficientStock: existing.allowInsufficientStock,
+    );
+    state = state.copyWith(items: updated);
     _syncSinglePaymentAmount();
   }
 

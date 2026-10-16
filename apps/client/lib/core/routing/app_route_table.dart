@@ -26,10 +26,10 @@ import 'package:billing_baba/features/settings/application/general_settings_rout
 import 'package:billing_baba/features/settings/models/accounting_settings.dart';
 import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/collaboration/presentation/sync_share_page.dart';
-import 'package:billing_baba/features/crm/presentation/contacts_screen.dart';
-import 'package:billing_baba/features/crm/presentation/deals_screen.dart';
-import 'package:billing_baba/features/crm/presentation/leads_screen.dart';
+import 'package:billing_baba/features/crm/presentation/crm_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/coming_soon_page.dart';
+import 'package:billing_baba/features/other_products/presentation/other_products_accounts_page.dart';
+import 'package:billing_baba/features/other_products/presentation/other_products_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/home_page.dart';
 import 'package:billing_baba/features/dashboard/presentation/mobile/dashboard_page.dart';
 import 'package:billing_baba/features/developer/models/developer_sub_route.dart';
@@ -51,8 +51,6 @@ import 'package:billing_baba/features/parties/presentation/parties_page.dart';
 import 'package:billing_baba/features/plans_pricing/application/plans_pricing_license_constants.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/mobile/mobile_license_info_page.dart';
 import 'package:billing_baba/features/plans_pricing/presentation/plans_pricing_page.dart';
-import 'package:billing_baba/features/bank_accounts/presentation/cash_and_bank_page.dart';
-import 'package:billing_baba/features/pos/presentation/pos_page.dart';
 import 'package:billing_baba/features/sale_screen/presentation/sale_screen_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_debit_note_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_expense_page.dart';
@@ -61,7 +59,6 @@ import 'package:billing_baba/features/purchases/presentation/add_purchase_fa_pag
 import 'package:billing_baba/features/purchases/presentation/add_purchase_order_page.dart';
 import 'package:billing_baba/features/purchases/presentation/add_purchase_page.dart';
 import 'package:billing_baba/features/other_income/presentation/add_other_income_page.dart';
-import 'package:billing_baba/features/other_income/presentation/other_incomes_page.dart';
 import 'package:billing_baba/features/purchases/presentation/expenses_page.dart';
 import 'package:billing_baba/features/purchases/presentation/payment_out_page.dart';
 import 'package:billing_baba/features/purchases/presentation/purchase_bills_page.dart';
@@ -71,7 +68,6 @@ import 'package:billing_baba/features/purchases/presentation/purchase_return_pag
 import 'package:billing_baba/features/loans/presentation/add_loan_account_page.dart';
 import 'package:billing_baba/features/loans/presentation/add_loan_transaction_page.dart';
 import 'package:billing_baba/features/loans/presentation/loan_account_detail_page.dart';
-import 'package:billing_baba/features/loans/presentation/loan_accounts_page.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/models/stock_summary_mobile_filters.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_item_detail_report_screen.dart';
 import 'package:billing_baba/features/reports/presentation/mobile/screens/mobile_report_group_screen.dart';
@@ -298,15 +294,18 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.crmLeads,
-            builder: (context, state) => const LeadsScreen(),
+            builder: (context, state) =>
+                const CrmPage(key: ValueKey('crm_shell')),
           ),
           GoRoute(
             path: AppRoutes.crmContacts,
-            builder: (context, state) => const ContactsScreen(),
+            builder: (context, state) =>
+                const CrmPage(key: ValueKey('crm_shell')),
           ),
           GoRoute(
             path: AppRoutes.crmDeals,
-            builder: (context, state) => const DealsScreen(),
+            builder: (context, state) =>
+                const CrmPage(key: ValueKey('crm_shell')),
           ),
           GoRoute(
             path: AppRoutes.items,
@@ -352,7 +351,7 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.pos,
-            builder: (context, state) => const PosPage(),
+            redirect: (_, _) => AppRoutes.saleScreen,
           ),
           GoRoute(
             path: AppRoutes.saleInvoices,
@@ -432,8 +431,20 @@ GoRouter createAppRouter({
             builder: (context, state) => const PaymentInPage(),
           ),
           GoRoute(
+            path: AppRoutes.otherProductsAccounts,
+            redirect: (_, _) => AppRoutes.otherIncome,
+          ),
+          GoRoute(
             path: AppRoutes.otherIncome,
-            builder: (context, state) => const OtherIncomesPage(),
+            builder: (context, state) => const OtherProductsAccountsPage(
+              key: ValueKey('other_products_accounts_shell'),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.saleCashAndBank,
+            builder: (context, state) => const OtherProductsAccountsPage(
+              key: ValueKey('other_products_accounts_shell'),
+            ),
           ),
           GoRoute(
             path: AppRoutes.addOtherIncome,
@@ -448,8 +459,21 @@ GoRouter createAppRouter({
             ),
           ),
           GoRoute(
-            path: AppRoutes.saleCashAndBank,
-            builder: (context, state) => const CashAndBankPage(),
+            path: AppRoutes.legacyOtherIncome,
+            redirect: (_, _) => AppRoutes.otherIncome,
+          ),
+          GoRoute(
+            path: AppRoutes.legacySaleCashAndBank,
+            redirect: (_, _) => AppRoutes.saleCashAndBank,
+          ),
+          GoRoute(
+            path: AppRoutes.legacyAddOtherIncome,
+            redirect: (_, _) => AppRoutes.addOtherIncome,
+          ),
+          GoRoute(
+            path: '${AppRoutes.legacyEditOtherIncome}/:incomeId',
+            redirect: (context, state) =>
+                '${AppRoutes.editOtherIncome}/${state.pathParameters['incomeId']}',
           ),
           GoRoute(
             path: AppRoutes.addPaymentIn,
@@ -576,7 +600,43 @@ GoRouter createAppRouter({
           ),
           GoRoute(
             path: AppRoutes.loanAccounts,
-            builder: (context, state) => const LoanAccountsPage(),
+            builder: (context, state) => const OtherProductsAccountsPage(
+              key: ValueKey('other_products_accounts_shell'),
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.legacyLoanAccounts,
+            redirect: (_, _) => AppRoutes.loanAccounts,
+          ),
+          GoRoute(
+            path: AppRoutes.legacyAddLoanAccount,
+            redirect: (_, _) => AppRoutes.addLoanAccount,
+          ),
+          GoRoute(
+            path: '${AppRoutes.legacyEditLoanAccount}/:loanAccountId',
+            redirect: (context, state) =>
+                '${AppRoutes.editLoanAccount}/${state.pathParameters['loanAccountId']}',
+          ),
+          GoRoute(
+            path: AppRoutes.legacyAddLoanTransaction,
+            redirect: (context, state) {
+              final loanAccountId =
+                  state.uri.queryParameters['loanAccountId'];
+              final type = state.uri.queryParameters['type'];
+              final query = {
+                if (loanAccountId != null) 'loanAccountId': loanAccountId,
+                if (type != null) 'type': type,
+              };
+              return Uri(
+                path: AppRoutes.addLoanTransaction,
+                queryParameters: query.isEmpty ? null : query,
+              ).toString();
+            },
+          ),
+          GoRoute(
+            path: '${AppRoutes.legacyLoanAccountDetail}/:loanAccountId',
+            redirect: (context, state) =>
+                '${AppRoutes.loanAccountDetail}/${state.pathParameters['loanAccountId']}',
           ),
           GoRoute(
             path: '${AppRoutes.loanAccountDetail}/:loanAccountId',
@@ -757,6 +817,10 @@ GoRouter createAppRouter({
           GoRoute(
             path: AppRoutes.utilitiesRecycleBin,
             builder: (context, state) => const RecycleBinPage(),
+          ),
+          GoRoute(
+            path: AppRoutes.otherProducts,
+            builder: (context, state) => const OtherProductsPage(),
           ),
           GoRoute(
             path: AppRoutes.developer,

@@ -22,7 +22,6 @@ abstract final class PurchaseSubRoutes {
       label: 'Payment-Out',
     ),
     PurchaseSubRoute(route: AppRoutes.purchaseExpenses, label: 'Expenses'),
-    PurchaseSubRoute(route: AppRoutes.loanAccounts, label: 'Loan Accounts'),
     PurchaseSubRoute(
       route: AppRoutes.purchaseOrder,
       label: 'Purchase Order',

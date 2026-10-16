@@ -31,7 +31,6 @@ import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/inventory/models/tier_price_model.dart';
 import 'package:billing_baba/features/inventory/models/unit_model.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/add_item_image_link_button.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternative_items_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/alternatives_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/general_information_section.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/add_item/manufacturing_section.dart';
@@ -237,20 +236,18 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
   int _tabCountFor(ItemType type) {
     if (_isMobileFullPage) {
       if (type == ItemType.product) {
-        return widget.editItem != null ? 6 : 5;
+        return 6;
       }
       return 2;
     }
     if (type == ItemType.product) {
-      return widget.editItem != null ? 7 : 6;
+      return 7;
     }
     return 2;
   }
 
-  bool get _showDesktopAlternativesTab => widget.editItem != null;
-
   List<String> _mobileTabsFor(ItemType type) {
-    if (type == ItemType.product && widget.editItem != null) {
+    if (type == ItemType.product) {
       return const [
         'Pricing',
         'Stock',
@@ -260,15 +257,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         'Suppliers',
       ];
     }
-    return type == ItemType.product
-        ? const [
-            'Pricing',
-            'Stock',
-            'Product Description',
-            'Online Store',
-            'Suppliers',
-          ]
-        : const ['Pricing', 'Online Store'];
+    return const ['Pricing', 'Online Store'];
   }
 
   InventoryUnit? _selectedBaseUnit() {
@@ -1473,34 +1462,11 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
               onBrandSelected: notifier.setBrand,
               unitLabel: _displayUnitLabel(),
               onSelectUnit: _openUnitPicker,
-              alternativesInlineAddButton: widget.editItem == null
-                  ? Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        AlternativeItemsAddButton(
-                          selectedItemIds: form.alternativeItemIds,
-                          excludeItemId: widget.editItem?.id,
-                          onChanged: notifier.setAlternativeItemIds,
-                        ),
-                        AddItemImageLinkButton(
-                          itemType: form.itemType,
-                          onPressed: () => unawaited(_addItemPhoto()),
-                        ),
-                      ],
-                    )
-                  : AddItemImageLinkButton(
-                      itemType: form.itemType,
-                      onPressed: () => unawaited(_addItemPhoto()),
-                    ),
-              alternativesListSection: widget.editItem == null
-                  ? AlternativeItemsListSection(
-                      selectedItemIds: form.alternativeItemIds,
-                      excludeItemId: widget.editItem?.id,
-                      onChanged: notifier.setAlternativeItemIds,
-                    )
-                  : null,
+              alternativesInlineAddButton: AddItemImageLinkButton(
+                itemType: form.itemType,
+                onPressed: () => unawaited(_addItemPhoto()),
+              ),
+              alternativesListSection: null,
               itemId: widget.editItem?.id,
               seedPrimaryImageUrl: widget.editItem?.primaryImageUrl,
               pendingItemPhotos: _pendingItemPhotos,
@@ -1776,9 +1742,9 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
         onDescriptionChanged: notifier.updateOnlineStoreDescription,
       ),
       3 => _buildMobileOnlineStoreSection(form, notifier),
-      4 when widget.editItem != null => Padding(
+      4 => Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
-        child: AlternativesSection(itemId: widget.editItem?.id),
+        child: _buildAlternativesTab(form, notifier),
       ),
       _ => Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -1908,27 +1874,6 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       };
     }
 
-    if (!_showDesktopAlternativesTab) {
-      return switch (tabIndex) {
-        0 => _buildPricingTab(
-          form,
-          notifier,
-          isService: false,
-          itemSettings: itemSettings,
-        ),
-        1 => _buildStockTab(
-          form,
-          notifier,
-          itemSettings: itemSettings,
-          categoryName: selectedCategory,
-        ),
-        2 => _buildProductDescriptionTab(form, notifier),
-        3 => _buildOnlineStoreTab(form, notifier),
-        4 => _buildManufacturingTab(form, notifier),
-        _ => _buildSuppliersTab(form, notifier),
-      };
-    }
-
     return switch (tabIndex) {
       0 => _buildPricingTab(
         form,
@@ -1945,7 +1890,7 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
       2 => _buildProductDescriptionTab(form, notifier),
       3 => _buildOnlineStoreTab(form, notifier),
       4 => _buildManufacturingTab(form, notifier),
-      5 => _buildAlternativesTab(),
+      5 => _buildAlternativesTab(form, notifier),
       _ => _buildSuppliersTab(form, notifier),
     };
   }
@@ -2286,9 +2231,16 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
     );
   }
 
-  Widget _buildAlternativesTab() {
+  Widget _buildAlternativesTab(
+    AddItemFormState form,
+    AddItemForm notifier,
+  ) {
+    if (widget.editItem != null) {
+      return AlternativesSection(itemId: widget.editItem!.id);
+    }
     return AlternativesSection(
-      itemId: widget.editItem?.id,
+      draftAlternativeItemIds: form.alternativeItemIds,
+      onDraftAlternativeItemIdsChanged: notifier.setAlternativeItemIds,
     );
   }
 
@@ -2331,24 +2283,15 @@ class _AddItemDialogState extends ConsumerState<AddItemDialog>
 
   Widget _buildTabBar(AddItemFormState form) {
     final tabs = form.itemType == ItemType.product
-        ? (_showDesktopAlternativesTab
-              ? const [
-                  'Pricing',
-                  'Stock',
-                  'Product Description',
-                  'Online Store',
-                  'Manufacturing',
-                  'Alternatives',
-                  'Suppliers',
-                ]
-              : const [
-                  'Pricing',
-                  'Stock',
-                  'Product Description',
-                  'Online Store',
-                  'Manufacturing',
-                  'Suppliers',
-                ])
+        ? const [
+            'Pricing',
+            'Stock',
+            'Product Description',
+            'Online Store',
+            'Manufacturing',
+            'Alternatives',
+            'Suppliers',
+          ]
         : const ['Pricing', 'Online Store'];
 
     return TabBar(

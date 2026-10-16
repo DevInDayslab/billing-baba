@@ -40,7 +40,7 @@ class MobilePosTerminalView extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton.icon(
-                onPressed: () => context.go(AppRoutes.pos),
+                onPressed: () => context.go(AppRoutes.saleScreen),
                 icon: const Icon(LucideIcons.externalLink, size: 18),
                 label: const Text('Open POS'),
               ),

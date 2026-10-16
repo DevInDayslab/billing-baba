@@ -10,6 +10,7 @@ import 'package:billing_baba/features/hidden_ledger/models/paginated_hidden_ledg
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/widgets/hidden_ledger_entry_detail_sheet.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_table_row.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/parties_desktop_layout.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
 import 'package:billing_baba/shared/widgets/app_ellipsis_text.dart';
 import 'package:flutter/material.dart';
@@ -149,22 +150,22 @@ class _HiddenLedgerListPageState
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            0,
-            AppSpacing.md,
-            AppSpacing.md,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const PartyPageTitleBar(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: PartiesDesktopLayout.titleBarPadding,
+              child: PartyPageTitleBar(
                 currentRoute: AppRoutes.partyHiddenLedger,
               ),
-              Expanded(child: body),
-            ],
-          ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: PartiesDesktopLayout.workspacePadding,
+                child: body,
+              ),
+            ),
+          ],
         ),
       ),
     );

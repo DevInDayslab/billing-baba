@@ -82,6 +82,7 @@ class _MobileShellState extends ConsumerState<MobileShell> {
     final currentTab = MobileNavDestinations.tabForLocation(location);
     final hideBottomNav =
         location == AppRoutes.pos ||
+        location == AppRoutes.saleScreen ||
         location == AppRoutes.utilitiesAddItemsBarcode ||
         MobileDocumentRoutes.hidesBottomNavigation(location);
 

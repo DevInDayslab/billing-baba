@@ -27,14 +27,14 @@ const _cardBorder = Color(0xFFE0E0E0);
 const _zebraRowBg = Color(0xFFFAFAFA);
 const double _cellHorizontalPadding = AppSpacing.sm;
 
-const _typeColWidth = 132.0;
-const _referenceColWidth = 128.0;
-const _dateColWidth = 148.0;
-const _totalColWidth = 100.0;
-const _balanceColWidth = 160.0;
-const _dueDateColWidth = 108.0;
-const _statusColWidth = 128.0;
-const _actionsColWidth = 72.0;
+const _typeColWidth = 104.0;
+const _referenceColWidth = 108.0;
+const _dateColWidth = 132.0;
+const _totalColWidth = 88.0;
+const _balanceColWidth = 124.0;
+const _dueDateColWidth = 92.0;
+const _statusColWidth = 96.0;
+const _actionsColWidth = 64.0;
 
 enum PartyTransactionSortColumn {
   type,
@@ -392,8 +392,8 @@ class _PartyLedgerTransactionsSectionState
       required ColumnFilter filterConfig,
       required Object? initialFilter,
       required ValueChanged<FilterResult?> onApply,
-      double minWidth = 72,
-      double maxWidth = 420,
+      double minWidth = 56,
+      double maxWidth = 2000,
     }) {
       return ResizableDataColumn(
         initialWidth: initialWidth,
@@ -457,6 +457,7 @@ class _PartyLedgerTransactionsSectionState
       column(
         label: 'Date',
         initialWidth: _dateColWidth,
+        minWidth: 72,
         sortColumn: PartyTransactionSortColumn.date,
         filterConfig: const ColumnFilter(
           id: 'date',
@@ -491,7 +492,7 @@ class _PartyLedgerTransactionsSectionState
       column(
         label: 'Balance / Outstanding',
         initialWidth: _balanceColWidth,
-        minWidth: 120,
+        minWidth: 80,
         sortColumn: PartyTransactionSortColumn.balance,
         filterConfig: const ColumnFilter(
           id: 'balance',
@@ -692,19 +693,32 @@ class _PartyLedgerTransactionsSectionState
 
               return LayoutBuilder(
                 builder: (context, constraints) {
-                  final table = SizedBox(
-                    width: constraints.maxWidth,
-                    child: ResizableDataTable(
-                      columns: columns,
-                      rows: filteredTransactions.isEmpty ? const [] : rows,
-                    ),
-                  );
+                  Widget buildTable({required List<ResizableDataRow> tableRows}) {
+                    return SizedBox(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      child: ResizableDataTable(
+                        columns: columns,
+                        rows: tableRows,
+                        shrinkToFit: true,
+                        expandToFill: true,
+                      ),
+                    );
+                  }
 
                   if (filteredTransactions.isEmpty) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        table,
+                        SizedBox(
+                          width: constraints.maxWidth,
+                          child: ResizableDataTable(
+                            columns: columns,
+                            rows: const [],
+                            shrinkToFit: true,
+                            expandToFill: true,
+                          ),
+                        ),
                         Expanded(
                           child: _EmptyTransactionsState(
                             isFiltered: isFiltered,
@@ -716,9 +730,12 @@ class _PartyLedgerTransactionsSectionState
 
                   return RefreshIndicator(
                     onRefresh: widget.onRefresh,
-                    child: SingleChildScrollView(
+                    child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      child: table,
+                      padding: EdgeInsets.zero,
+                      children: [
+                        buildTable(tableRows: rows),
+                      ],
                     ),
                   );
                 },

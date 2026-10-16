@@ -45,8 +45,8 @@ class ExpenseItemTransactionsTable extends ConsumerWidget {
       searchQuery,
     );
 
-    final displayTotal = columnFilters.hasActiveFilters ||
-            searchQuery.trim().isNotEmpty
+    final displayTotal =
+        columnFilters.hasActiveFilters || searchQuery.trim().isNotEmpty
         ? filteredRows.fold<double>(0, (sum, row) => sum + row.amount)
         : totalAmount;
 
@@ -60,136 +60,134 @@ class ExpenseItemTransactionsTable extends ConsumerWidget {
         ),
     ];
 
-    return Expanded(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: _cardBorder),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.sm,
-              ),
-              child: Row(
-                children: [
-                  const Text(
-                    'EXPENSE',
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                const Text(
+                  'EXPENSE',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: ReportSearchField(
+                    hintText: 'Search items...',
+                    onChanged: ref
+                        .read(reportFiltersProvider.notifier)
+                        .setSearchQuery,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Text(
+                  columnFilters.hasActiveFilters ||
+                          searchQuery.trim().isNotEmpty
+                      ? '${filteredRows.length} shown · ${rows.length} total'
+                      : '${rows.length} total',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                FilledButton.icon(
+                  onPressed: () => context.push(AppRoutes.purchaseExpenses),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: reportActiveBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text(
+                    'Add Expense',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 0.6,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.lg),
-                  Expanded(
-                    child: ReportSearchField(
-                      hintText: 'Search items...',
-                      onChanged: ref
-                          .read(reportFiltersProvider.notifier)
-                          .setSearchQuery,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    columnFilters.hasActiveFilters ||
-                            searchQuery.trim().isNotEmpty
-                        ? '${filteredRows.length} shown · ${rows.length} total'
-                        : '${rows.length} total',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  FilledButton.icon(
-                    onPressed: () => context.push(AppRoutes.purchaseExpenses),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: reportActiveBlue,
-                      foregroundColor: Colors.white,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: _cardBorder),
+          Expanded(
+            child: ReportTableArea(
+              child: filteredRows.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No expense records found for the selected period.',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    )
+                  : Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: 10,
+                        horizontal: AppSpacing.sm,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text(
-                      'Add Expense',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                      child: ResizableDataTable(
+                        columns: columns,
+                        rows: tableRows,
                       ),
                     ),
-                  ),
-                ],
-              ),
             ),
-            const Divider(height: 1, color: _cardBorder),
-            Expanded(
-              child: ReportTableArea(
-                child: filteredRows.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'No expense records found for the selected period.',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      )
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                        ),
-                        child: ResizableDataTable(
-                          columns: columns,
-                          rows: tableRows,
-                        ),
-                      ),
-              ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.md,
-              ),
-              decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: reportCardBorder)),
-              ),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text.rich(
-                  TextSpan(
-                    style: const TextStyle(fontSize: 14),
-                    children: [
-                      const TextSpan(
-                        text: 'Total Expense: ',
-                        style: TextStyle(color: AppColors.textSecondary),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: reportCardBorder)),
+            ),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text.rich(
+                TextSpan(
+                  style: const TextStyle(fontSize: 14),
+                  children: [
+                    const TextSpan(
+                      text: 'Total Expense: ',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    TextSpan(
+                      text: formatReportCurrency(displayTotal),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: reportAddRed,
                       ),
-                      TextSpan(
-                        text: formatReportCurrency(displayTotal),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: reportAddRed,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

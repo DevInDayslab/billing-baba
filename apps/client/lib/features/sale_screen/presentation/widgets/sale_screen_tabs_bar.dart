@@ -1,5 +1,6 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
+import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_sales_history_dialog.dart';
 import 'package:billing_baba/features/sale_screen/application/sale_screen_tabs_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,11 +12,19 @@ const _tabBorderColor = Color(0xFFC5C9CE);
 const _tabMinWidth = 80.0;
 const _tabMaxWidth = 200.0;
 const _tabHeight = 34.0;
+const _historyHeadWidth = 96.0;
+const _trailingControlSize = 28.0;
+const _trailingGap = 4.0;
 
 /// Chrome-style tab strip for multiple sale-screen POS sessions (up to 10).
 class SaleScreenTabsBar extends ConsumerWidget {
-  const SaleScreenTabsBar({this.onFormClose, super.key});
+  const SaleScreenTabsBar({
+    this.onMinimize,
+    this.onFormClose,
+    super.key,
+  });
 
+  final VoidCallback? onMinimize;
   final VoidCallback? onFormClose;
 
   @override
@@ -38,25 +47,11 @@ class SaleScreenTabsBar extends ConsumerWidget {
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    var trailingSpace = 0.0;
-                    if (tabsNotifier.canAddTab) trailingSpace += 36.0;
-                    if (onFormClose != null) trailingSpace += 36.0;
-                    final available = constraints.maxWidth - trailingSpace;
-                    final idealWidth = tabCount == 0
-                        ? _tabMaxWidth
-                        : (available / tabCount).clamp(
-                            _tabMinWidth,
-                            _tabMaxWidth,
-                          );
-                    final totalIdealWidth = idealWidth * tabCount;
-                    final tabWidth = totalIdealWidth > available
-                        ? (available / tabCount).clamp(
-                            _tabMinWidth,
-                            _tabMaxWidth,
-                          )
-                        : idealWidth;
+                    final available = constraints.maxWidth;
+                    final tabWidth = _tabWidthFor(available, tabCount);
 
                     final tabsRow = Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         for (var i = 0; i < tabCount; i++)
                           SizedBox(
@@ -72,22 +67,36 @@ class SaleScreenTabsBar extends ConsumerWidget {
                       ],
                     );
 
-                    if (tabWidth * tabCount > available + 0.5) {
+                    final needsHorizontalScroll =
+                        tabWidth * tabCount > available + 0.5;
+                    if (needsHorizontalScroll) {
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
+                        clipBehavior: Clip.hardEdge,
                         child: tabsRow,
                       );
                     }
-                    return tabsRow;
+                    return Align(
+                      alignment: Alignment.centerLeft,
+                      child: tabsRow,
+                    );
                   },
                 ),
               ),
+              const SizedBox(width: _trailingGap),
+              _HistoryHeadButton(
+                onTap: () => PosSalesHistoryDialog.show(context),
+              ),
               if (tabsNotifier.canAddTab) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: _trailingGap),
                 _AddTabButton(onTap: tabsNotifier.addTab),
               ],
+              if (onMinimize != null) ...[
+                const SizedBox(width: _trailingGap),
+                _MinimizeFormButton(onTap: onMinimize!),
+              ],
               if (onFormClose != null) ...[
-                const SizedBox(width: 4),
+                const SizedBox(width: _trailingGap),
                 _CloseFormButton(onTap: onFormClose!),
               ],
             ],
@@ -95,6 +104,16 @@ class SaleScreenTabsBar extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  static double _tabWidthFor(double available, int tabCount) {
+    if (tabCount <= 0) return _tabMaxWidth;
+    final even = available / tabCount;
+    if (even >= _tabMinWidth) {
+      return even.clamp(_tabMinWidth, _tabMaxWidth);
+    }
+    if (even >= 48) return even;
+    return _tabMinWidth;
   }
 
   void _closeTab(WidgetRef ref, SaleScreenTabs tabsNotifier, int index) {
@@ -212,6 +231,58 @@ class _SaleScreenTabChipState extends State<_SaleScreenTabChip> {
   }
 }
 
+/// Fixed “tab head” to toggle sales history, left of the new-tab (+) control.
+class _HistoryHeadButton extends StatelessWidget {
+  const _HistoryHeadButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Show sales history',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+          child: Container(
+            width: _historyHeadWidth,
+            height: _tabHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: _inactiveTabBackground,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.history,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'History',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AddTabButton extends StatelessWidget {
   const _AddTabButton({required this.onTap});
 
@@ -225,13 +296,47 @@ class _AddTabButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          width: 28,
-          height: 28,
+          width: _trailingControlSize,
+          height: _trailingControlSize,
           decoration: const BoxDecoration(
             color: AppColors.primary,
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.add, size: 18, color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+class _MinimizeFormButton extends StatelessWidget {
+  const _MinimizeFormButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Minimize',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            width: _trailingControlSize,
+            height: _trailingControlSize,
+            decoration: BoxDecoration(
+              color: _activeTabBackground,
+              shape: BoxShape.circle,
+              border: Border.all(color: _tabBorderColor),
+            ),
+            child: const Icon(
+              Icons.minimize,
+              size: 16,
+              color: AppColors.textSecondary,
+            ),
+          ),
         ),
       ),
     );
@@ -253,8 +358,8 @@ class _CloseFormButton extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: Container(
-            width: 28,
-            height: 28,
+            width: _trailingControlSize,
+            height: _trailingControlSize,
             decoration: BoxDecoration(
               color: _activeTabBackground,
               shape: BoxShape.circle,

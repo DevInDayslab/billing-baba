@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/features/other_products/models/other_product_sub_route.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:billing_baba/features/settings/models/general_settings.dart';
@@ -164,7 +165,25 @@ abstract final class MobileTransactionCatalog {
 
   /// Non sale/purchase list routes (excludes payment-in/out lists).
   static final List<MobileTransactionScopeDefinition> _otherDefinitions = [
-    // Reserved for future "other" transaction modules (stock transfer, etc.).
+    for (final sub in _otherProductsAccountScopes)
+      MobileTransactionScopeDefinition(
+        scopeId: _scopeId(sub.route),
+        route: sub.route,
+        title: sub.label,
+        category: MobileTransactionCategory.other,
+        addRoute: _otherAddRoute(sub.route),
+        addFabLabel: _otherAddLabel(sub.route),
+        leadingIcon: _otherIcon(sub.route),
+      ),
+  ];
+
+  static const _otherProductsAccountScopes = [
+    OtherProductSubRoute(route: AppRoutes.otherIncome, label: 'Other Income'),
+    OtherProductSubRoute(
+      route: AppRoutes.saleCashAndBank,
+      label: 'Cash & Bank',
+    ),
+    OtherProductSubRoute(route: AppRoutes.loanAccounts, label: 'Loan Accounts'),
   ];
 
   static String _scopeId(String route) =>
@@ -178,7 +197,6 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleReturnCreditNote => AppRoutes.addCreditNote,
     AppRoutes.saleFa => AppRoutes.addSaleFa,
     AppRoutes.salePaymentIn => AppRoutes.addPaymentIn,
-    AppRoutes.otherIncome => AppRoutes.addOtherIncome,
     AppRoutes.saleProformaInvoice => AppRoutes.addProforma,
     AppRoutes.saleJobWorkOut => AppRoutes.addJobWork,
     _ => null,
@@ -191,7 +209,6 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleDeliveryChallan => 'Add Challan',
     AppRoutes.saleReturnCreditNote => 'Add Credit Note',
     AppRoutes.saleFa => 'Add Sale FA',
-    AppRoutes.otherIncome => 'Add Other Income',
     _ => 'Add',
   };
 
@@ -200,7 +217,6 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.saleEstimateQuotation => LucideIcons.fileText,
     AppRoutes.saleProformaInvoice => LucideIcons.fileText,
     AppRoutes.salePaymentIn => LucideIcons.banknote,
-    AppRoutes.otherIncome => LucideIcons.circlePlus,
     AppRoutes.saleOrder => LucideIcons.shoppingBag,
     AppRoutes.saleDeliveryChallan => LucideIcons.truck,
     AppRoutes.saleJobWorkOut => LucideIcons.factory,
@@ -216,7 +232,6 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.purchaseReturnDebitNote => AppRoutes.addDebitNote,
     AppRoutes.purchaseFa => AppRoutes.addPurchaseFa,
     AppRoutes.purchasePaymentOut => AppRoutes.addPaymentOut,
-    AppRoutes.loanAccounts => AppRoutes.addLoanAccount,
     _ => null,
   };
 
@@ -236,7 +251,25 @@ abstract final class MobileTransactionCatalog {
     AppRoutes.purchaseOrder => LucideIcons.clipboardList,
     AppRoutes.purchaseReturnDebitNote => LucideIcons.undo2,
     AppRoutes.purchaseFa => LucideIcons.landmark,
-    AppRoutes.loanAccounts => LucideIcons.landmark,
     _ => LucideIcons.shoppingCart,
+  };
+
+  static String? _otherAddRoute(String route) => switch (route) {
+    AppRoutes.otherIncome => AppRoutes.addOtherIncome,
+    AppRoutes.loanAccounts => AppRoutes.addLoanAccount,
+    _ => null,
+  };
+
+  static String? _otherAddLabel(String route) => switch (route) {
+    AppRoutes.otherIncome => 'Add Other Income',
+    AppRoutes.loanAccounts => 'Add loan',
+    _ => 'Add',
+  };
+
+  static IconData _otherIcon(String route) => switch (route) {
+    AppRoutes.otherIncome => LucideIcons.circlePlus,
+    AppRoutes.saleCashAndBank => LucideIcons.landmark,
+    AppRoutes.loanAccounts => LucideIcons.handCoins,
+    _ => LucideIcons.box,
   };
 }

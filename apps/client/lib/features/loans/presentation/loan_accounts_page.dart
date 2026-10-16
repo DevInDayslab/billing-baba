@@ -2,28 +2,35 @@ import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/loans/application/loan_providers.dart';
 import 'package:billing_baba/features/loans/models/loan_models.dart';
-import 'package:billing_baba/features/purchases/presentation/desktop/widgets/purchase_page_title_bar.dart';
 import 'package:billing_baba/shared/widgets/adaptive_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class LoanAccountsPage extends StatelessWidget {
-  const LoanAccountsPage({super.key});
+  const LoanAccountsPage({this.embeddedInAccountsHub = false, super.key});
+
+  final bool embeddedInAccountsHub;
 
   @override
   Widget build(BuildContext context) {
+    if (embeddedInAccountsHub) {
+      return ColoredBox(
+        color: AppColors.background,
+        child: const _LoanAccountsListBody(showMobileAppBar: false),
+      );
+    }
     return const AdaptivePage(
-      desktop: _LoanAccountsListBody(showTitleBar: true),
-      mobile: _LoanAccountsListBody(showTitleBar: false),
+      desktop: _LoanAccountsListBody(showMobileAppBar: false),
+      mobile: _LoanAccountsListBody(showMobileAppBar: true),
     );
   }
 }
 
 class _LoanAccountsListBody extends ConsumerWidget {
-  const _LoanAccountsListBody({required this.showTitleBar});
+  const _LoanAccountsListBody({required this.showMobileAppBar});
 
-  final bool showTitleBar;
+  final bool showMobileAppBar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,9 +38,7 @@ class _LoanAccountsListBody extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: showTitleBar
-          ? null
-          : AppBar(title: const Text('Loan accounts')),
+      appBar: showMobileAppBar ? AppBar(title: const Text('Loan accounts')) : null,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(AppRoutes.addLoanAccount),
         icon: const Icon(Icons.add),
@@ -42,12 +47,6 @@ class _LoanAccountsListBody extends ConsumerWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (showTitleBar) ...[
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: PurchasePageTitleBar(currentRoute: AppRoutes.loanAccounts),
-            ),
-          ],
           Expanded(
             child: accountsAsync.when(
               data: (accounts) {

@@ -1,5 +1,7 @@
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/application/inventory_items_provider.dart';
+import 'package:billing_baba/features/inventory/application/inventory_providers.dart';
+import 'package:billing_baba/features/inventory/models/item_location_model.dart';
 import 'package:billing_baba/features/pos/application/pos_catalog.dart';
 import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
@@ -17,33 +19,46 @@ final _currency = NumberFormat.currency(
   decimalDigits: 0,
 );
 
-String _saleProductInfoTooltip(PosItem item) {
+List<String> _itemStorageTooltipLines(List<ItemLocationModel> locations) {
+  for (final location in locations) {
+    final lines = <String>[];
+    final rack = location.rack?.trim();
+    if (rack != null && rack.isNotEmpty) {
+      lines.add('Rack: $rack');
+    }
+    final shelf = location.shelf?.trim();
+    if (shelf != null && shelf.isNotEmpty) {
+      lines.add('Shelf: $shelf');
+    }
+    if (lines.isNotEmpty) return lines;
+  }
+  return const [];
+}
+
+String _saleProductInfoTooltip(
+  PosItem item,
+  List<ItemLocationModel> locations,
+) {
   final lines = <String>[];
   final purchase = item.purchasePrice;
-  final selling = item.price;
 
   lines.add(
     'Purchase price: ${purchase != null ? _currency.format(purchase) : '—'}',
   );
-  lines.add('Selling price: ${_currency.format(selling)}');
 
-  final mrp = item.mrp;
-  if (mrp != null && mrp > 0) {
-    lines.add('MRP: ${_currency.format(mrp)}');
-  }
-
+  final selling = item.price;
   if (purchase != null) {
     final profit = selling - purchase;
     final marginPercent = selling > 0 ? (profit / selling * 100).round() : 0;
     lines.add('Profit: ${_currency.format(profit)} ($marginPercent%)');
   }
 
-  lines.add('Stock: ${item.stock} ${item.unit}');
-
   final hsn = item.hsnCode?.trim();
   if (hsn != null && hsn.isNotEmpty) {
     lines.add('HSN: $hsn');
   }
+
+  lines.addAll(_itemStorageTooltipLines(locations));
 
   final category = item.categoryName.trim();
   if (category.isNotEmpty && category.toLowerCase() != 'uncategorized') {
@@ -219,9 +234,10 @@ class _SaleSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackSearch = constraints.maxWidth < 520;
+        final searchField = Expanded(
           child: Focus(
             onKeyEvent: (node, event) {
               if (event is! KeyDownEvent) return KeyEventResult.ignored;
@@ -289,14 +305,40 @@ class _SaleSearchBar extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        FilledButton.icon(
-          onPressed: onSubmitted,
-          icon: const Icon(Icons.search),
-          label: const Text('Search'),
-        ),
-      ],
+        );
+        final searchButton = stackSearch
+            ? FilledButton(
+                onPressed: onSubmitted,
+                child: const Icon(Icons.search),
+              )
+            : FilledButton.icon(
+                onPressed: onSubmitted,
+                icon: const Icon(Icons.search),
+                label: const Text('Search'),
+              );
+
+        if (stackSearch) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              searchField,
+              const SizedBox(height: AppSpacing.sm),
+              Align(
+                alignment: Alignment.centerRight,
+                child: searchButton,
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            searchField,
+            const SizedBox(width: AppSpacing.sm),
+            searchButton,
+          ],
+        );
+      },
     );
   }
 }
@@ -382,7 +424,7 @@ class _CategoryChip extends StatelessWidget {
   }
 }
 
-class _SaleProductCard extends StatelessWidget {
+class _SaleProductCard extends ConsumerWidget {
   const _SaleProductCard({
     required this.item,
     required this.highlighted,
@@ -396,15 +438,15 @@ class _SaleProductCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locations =
+        ref.watch(itemLocationsProvider(item.id)).value ?? const [];
+
     final mrp = item.mrp;
-    final hasDiscount = mrp != null && mrp > item.price && mrp > 0;
-    final offPercent = hasDiscount
-        ? (((mrp - item.price) / mrp) * 100).round()
-        : null;
+    final hasMrp = mrp != null && mrp > 0;
+    final selling = item.price;
     final inStock = !item.isOutOfStock;
     final brand = item.brandName?.trim();
-    final sku = item.sku.trim();
     final category = item.categoryName.trim();
     final showCategory =
         category.isNotEmpty && category.toLowerCase() != 'uncategorized';
@@ -467,19 +509,6 @@ class _SaleProductCard extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                if (sku.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    sku,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.labelSmall?.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w400,
-                      color: AppColors.textSecondary.withValues(alpha: 0.75),
-                    ),
-                  ),
-                ],
                 if (brand != null && brand.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.xxs),
                   Text(
@@ -506,7 +535,7 @@ class _SaleProductCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Row(
                   children: [
-                    if (hasDiscount)
+                    if (hasMrp) ...[
                       Text(
                         _currency.format(mrp),
                         style: textTheme.labelSmall?.copyWith(
@@ -514,10 +543,11 @@ class _SaleProductCard extends StatelessWidget {
                           decoration: TextDecoration.lineThrough,
                         ),
                       ),
-                    if (hasDiscount) const SizedBox(width: AppSpacing.xs),
+                      const SizedBox(width: AppSpacing.xs),
+                    ],
                     Flexible(
                       child: Text(
-                        _currency.format(item.price),
+                        _currency.format(selling),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.titleSmall?.copyWith(
@@ -526,14 +556,6 @@ class _SaleProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (offPercent != null) ...[
-                      const SizedBox(width: AppSpacing.xs),
-                      _Badge(
-                        label: '$offPercent% OFF',
-                        background: AppColors.dangerSoft,
-                        foreground: AppColors.danger,
-                      ),
-                    ],
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -550,7 +572,9 @@ class _SaleProductCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    _SaleProductInfoButton(tooltip: _saleProductInfoTooltip(item)),
+                    _SaleProductInfoButton(
+                      tooltip: _saleProductInfoTooltip(item, locations),
+                    ),
                   ],
                 ),
               ],

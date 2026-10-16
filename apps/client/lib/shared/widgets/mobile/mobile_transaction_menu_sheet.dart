@@ -78,7 +78,7 @@ List<MobileTransactionMenuSection> mobileTransactionMenuSections(
         MobileTransactionMenuItem(
           label: 'Mobile POS',
           icon: LucideIcons.zap,
-          onTap: () => go(AppRoutes.pos),
+          onTap: () => go(AppRoutes.saleScreen),
         ),
       ],
     ),

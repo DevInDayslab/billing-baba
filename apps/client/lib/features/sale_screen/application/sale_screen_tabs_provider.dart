@@ -62,7 +62,7 @@ int _nextAvailablePosNumber(List<SaleScreenTab> tabs, {required int maxTabs}) {
 
 String _sessionKeyForPosNumber(int posNumber) => 'sale_screen_tab_$posNumber';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class SaleScreenTabs extends _$SaleScreenTabs {
   static const maxTabs = 10;
 

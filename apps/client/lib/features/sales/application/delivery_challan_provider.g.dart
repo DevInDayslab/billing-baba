@@ -271,7 +271,7 @@ final class DeliveryChallansProvider
   DeliveryChallans create() => DeliveryChallans();
 }
 
-String _$deliveryChallansHash() => r'18b37b2b6c1c9b2d1cee1e698c8e9a6b5a76e7d6';
+String _$deliveryChallansHash() => r'776653249160a5fbffd0297ff8a1315897029192';
 
 abstract class _$DeliveryChallans
     extends $AsyncNotifier<PaginatedSaleInvoices> {

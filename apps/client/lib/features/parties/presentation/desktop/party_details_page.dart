@@ -10,6 +10,7 @@ import 'package:billing_baba/features/parties/presentation/desktop/widgets/add_p
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_detail_panel.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_list_panel.dart';
 import 'package:billing_baba/features/parties/parties_navigation.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/parties_desktop_layout.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_settings_side_panel.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +100,8 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
         }
 
         return InventorySplitLayout(
+          listFlex: partyListPanelFlex,
+          detailFlex: partyDetailPanelFlex,
           listPanel: const PartyListPanel(),
           detailPanel: selectedId == null
               ? const InventoryDetailPlaceholder(
@@ -117,26 +120,26 @@ class _PartyDetailsPageState extends ConsumerState<DesktopPartyDetailsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            0,
-            AppSpacing.md,
-            AppSpacing.md,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PartyPageTitleBar(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: PartiesDesktopLayout.titleBarPadding,
+              child: PartyPageTitleBar(
                 currentRoute: AppRoutes.partyDetails,
                 onAddParty: () => openDesktopAddPartyDialog(context),
                 onSettingsTap: () => unawaited(
                   showPartySettingsSidePanel(context: context),
                 ),
               ),
-              Expanded(child: body),
-            ],
-          ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: PartiesDesktopLayout.workspacePadding,
+                child: body,
+              ),
+            ),
+          ],
         ),
       ),
     );

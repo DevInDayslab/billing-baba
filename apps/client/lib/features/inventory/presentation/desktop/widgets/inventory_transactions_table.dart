@@ -21,13 +21,14 @@ const _tableBorder = Color(0xFFE0E0E0);
 const _zebraRowBg = Color(0xFFFAFAFA);
 const double _cellHorizontalPadding = 8;
 
-const _typeColWidth = 148.0;
-const _invoiceRefColWidth = 120.0;
-const _nameColWidth = 128.0;
-const _dateColWidth = 132.0;
-const _qtyColWidth = 80.0;
-const _priceColWidth = 92.0;
+const _typeColWidth = 104.0;
+const _invoiceRefColWidth = 108.0;
+const _nameColWidth = 120.0;
+const _dateColWidth = 120.0;
+const _qtyColWidth = 72.0;
+const _priceColWidth = 88.0;
 const _statusColWidth = 88.0;
+const _columnMaxWidth = 2000.0;
 
 class InventoryTransactionsTable extends ConsumerWidget {
   const InventoryTransactionsTable({
@@ -168,34 +169,45 @@ class _TransactionsTableShell extends ConsumerWidget {
         ),
     ];
 
-    if (showEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        Widget buildTable({required List<ResizableDataRow> tableRows}) {
+          return SizedBox(
+            width: constraints.maxWidth,
+            height: constraints.maxHeight,
             child: ResizableDataTable(
               columns: columns,
-              rows: const [],
+              rows: tableRows,
               headerBackgroundColor: const Color(0xFFF5F5F5),
+              shrinkToFit: true,
+              expandToFill: true,
             ),
-          ),
-          Expanded(
-            child: _TransactionsEmptyState(isFiltered: isFiltered),
-          ),
-        ],
-      );
-    }
+          );
+        }
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        child: ResizableDataTable(
-          columns: columns,
-          rows: dataRows,
-          headerBackgroundColor: const Color(0xFFF5F5F5),
-        ),
-      ),
+        if (showEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: constraints.maxWidth,
+                child: ResizableDataTable(
+                  columns: columns,
+                  rows: const [],
+                  headerBackgroundColor: const Color(0xFFF5F5F5),
+                  shrinkToFit: true,
+                  expandToFill: true,
+                ),
+              ),
+              Expanded(
+                child: _TransactionsEmptyState(isFiltered: isFiltered),
+              ),
+            ],
+          );
+        }
+
+        return buildTable(tableRows: dataRows);
+      },
     );
   }
 }
@@ -296,8 +308,21 @@ class _InventoryTransactionTableColumns {
       productTransactionStatusOptionsProvider(itemId),
     );
 
+    ResizableDataColumn col({
+      required double initialWidth,
+      required Widget header,
+      double minWidth = 56,
+    }) {
+      return ResizableDataColumn(
+        initialWidth: initialWidth,
+        minWidth: minWidth,
+        maxWidth: _columnMaxWidth,
+        header: header,
+      );
+    }
+
     return [
-      ResizableDataColumn(
+      col(
         initialWidth: _typeColWidth,
         header: InventoryLedgerColumnHeader(
           label: 'Type',
@@ -322,7 +347,7 @@ class _InventoryTransactionTableColumns {
           ),
         ),
       ),
-      ResizableDataColumn(
+      col(
         initialWidth: _invoiceRefColWidth,
         header: InventoryLedgerColumnHeader(
           label: 'Invoice/Ref.',
@@ -346,7 +371,7 @@ class _InventoryTransactionTableColumns {
           ),
         ),
       ),
-      ResizableDataColumn(
+      col(
         initialWidth: _nameColWidth,
         header: InventoryLedgerColumnHeader(
           label: 'Name',
@@ -370,8 +395,9 @@ class _InventoryTransactionTableColumns {
           ),
         ),
       ),
-      ResizableDataColumn(
+      col(
         initialWidth: _dateColWidth,
+        minWidth: 72,
         header: InventoryLedgerColumnHeader(
           label: 'Date',
           sortColumn: InventoryTransactionSortColumn.date,
@@ -393,7 +419,7 @@ class _InventoryTransactionTableColumns {
           ),
         ),
       ),
-      ResizableDataColumn(
+      col(
         initialWidth: _qtyColWidth,
         header: InventoryLedgerColumnHeader(
           label: 'Quantity',
@@ -418,7 +444,7 @@ class _InventoryTransactionTableColumns {
           ),
         ),
       ),
-      ResizableDataColumn(
+      col(
         initialWidth: _priceColWidth,
         header: InventoryLedgerColumnHeader(
           label: 'Price/Unit',
@@ -441,7 +467,7 @@ class _InventoryTransactionTableColumns {
           ),
         ),
       ),
-      ResizableDataColumn(
+      col(
         initialWidth: _statusColWidth,
         header: InventoryLedgerColumnHeader(
           label: 'Status',

@@ -3,6 +3,7 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_list_header.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_search_field.dart';
 import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_split_layout.dart';
+import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
 import 'package:billing_baba/features/other_income/application/other_incomes_provider.dart';
 import 'package:billing_baba/features/other_income/models/other_income_model.dart';
 import 'package:billing_baba/features/other_income/presentation/desktop/widgets/add_other_income_item_dialog.dart';
@@ -93,41 +94,44 @@ class _ItemListPanel extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: InventorySearchField(
-                  hint: 'Search',
-                  onChanged: onSearchChanged,
+              InventorySearchField(
+                hint: 'Search',
+                onChanged: onSearchChanged,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: inventoryButtonHeight,
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => showAddExpenseItemDialog(context),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add Income Item'),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              OutlinedButton.icon(
-                onPressed: () => showAddExpenseItemDialog(context),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Item'),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              FilledButton.icon(
-                onPressed: onAddOtherIncome,
-                style: FilledButton.styleFrom(
-                  backgroundColor: _addOtherIncomeGreen,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: 12,
+              const SizedBox(height: AppSpacing.sm),
+              SizedBox(
+                height: inventoryButtonHeight,
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: onAddOtherIncome,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _addOtherIncomeGreen,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                ),
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text(
-                  'Add Other Income',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text(
+                    'Add Other Income',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

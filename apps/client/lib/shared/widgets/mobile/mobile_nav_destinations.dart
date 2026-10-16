@@ -54,7 +54,7 @@ abstract final class MobileNavDestinations {
     MobileNavDestination(
       tab: MobileNavTab.pos,
       label: 'POS',
-      route: AppRoutes.pos,
+      route: AppRoutes.saleScreen,
       icon: Icons.point_of_sale_outlined,
       selectedIcon: Icons.point_of_sale_rounded,
       isCenterAction: true,
@@ -95,7 +95,10 @@ abstract final class MobileNavDestinations {
 
   /// Resolves the active tab from the current GoRouter location.
   static MobileNavTab tabForLocation(String location) {
-    if (location.startsWith(AppRoutes.pos)) return MobileNavTab.pos;
+    if (location.startsWith(AppRoutes.pos) ||
+        location.startsWith(AppRoutes.saleScreen)) {
+      return MobileNavTab.pos;
+    }
     if (location.startsWith(AppRoutes.parties)) return MobileNavTab.parties;
     if (location.startsWith(AppRoutes.reports)) return MobileNavTab.reports;
     if (location.startsWith(AppRoutes.items)) return MobileNavTab.items;

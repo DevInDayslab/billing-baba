@@ -2,6 +2,7 @@ import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/database/database.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
+import 'package:billing_baba/core/platform/desktop_app_instance.dart';
 import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
@@ -92,6 +93,7 @@ abstract final class DesktopMenuActions {
       await SystemNavigator.pop();
       return;
     }
+    await DesktopAppInstance.release();
     await windowManager.close();
   }
 

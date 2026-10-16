@@ -9,12 +9,12 @@ import 'package:billing_baba/features/pos/application/pos_items_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_receipt_printer.dart';
 import 'package:billing_baba/features/pos/application/pos_sales_list_provider.dart';
 import 'package:billing_baba/features/pos/models/pos_item.dart';
-import 'package:billing_baba/features/pos/models/pos_sale.dart';
-import 'package:billing_baba/features/pos/models/pos_sale_line_item.dart';
 import 'package:billing_baba/features/pos/pos_exceptions.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_panel.dart';
 import 'package:billing_baba/features/sale_screen/application/sale_invoice_focus_provider.dart';
+import 'package:billing_baba/features/sale_screen/application/sale_screen_minimized_provider.dart';
 import 'package:billing_baba/features/sale_screen/application/sale_screen_tabs_provider.dart';
+import 'package:billing_baba/features/sale_screen/application/sale_screen_ui_state_provider.dart';
 import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_invoice_panel.dart';
 import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_product_pane.dart';
 import 'package:billing_baba/features/sale_screen/presentation/widgets/sale_screen_tabs_bar.dart';
@@ -47,7 +47,31 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _searchFocus.requestFocus();
+      if (!mounted) return;
+      ref.read(saleScreenMinimizedProvider.notifier).clear();
+      _restoreUiStateForSession(_cartSessionKey);
+      _searchFocus.requestFocus();
+    });
+  }
+
+  void _persistUiStateForSession(String sessionKey) {
+    ref.read(saleScreenUiStateProvider.notifier).save(
+      sessionKey,
+      SaleScreenTabUiState(
+        searchText: _searchController.text,
+        categoryId: _categoryId,
+        highlightIndex: _highlightIndex,
+      ),
+    );
+  }
+
+  void _restoreUiStateForSession(String sessionKey) {
+    final ui = ref.read(saleScreenUiStateProvider.notifier).uiFor(sessionKey);
+    _searchController.text = ui.searchText;
+    setState(() {
+      _query = ui.searchText;
+      _categoryId = ui.categoryId;
+      _highlightIndex = ui.highlightIndex;
     });
   }
 
@@ -73,6 +97,7 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
       _query = value;
       _highlightIndex = 0;
     });
+    _persistUiStateForSession(_cartSessionKey);
   }
 
   void _clearQuery({bool refocusSearch = true}) {
@@ -81,6 +106,7 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
       _query = '';
       _highlightIndex = 0;
     });
+    _persistUiStateForSession(_cartSessionKey);
     if (refocusSearch) {
       _searchFocus.requestFocus();
     }
@@ -178,28 +204,7 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
       return;
     }
 
-    final preview = PosSale(
-      id: 'PREVIEW',
-      docNumber: 'Bill Preview',
-      completedAt: DateTime.now(),
-      totalAmount: cart.subtotal,
-      taxAmount: cart.totalTax,
-      finalAmount: cart.totalPayable,
-      itemCount: cart.totalQty,
-      customerName: cart.customerName,
-      payments: cart.payments,
-      items: [
-        for (final line in cart.items)
-          PosSaleLineItem(
-            name: line.item.name,
-            quantity: line.quantity,
-            lineTotal: line.lineTotal,
-            itemId: line.item.id,
-            unit: line.item.unit,
-            unitPrice: line.unitPrice,
-          ),
-      ],
-    );
+    final preview = posPreviewSaleFromCart(cart);
 
     try {
       await ref
@@ -254,6 +259,14 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
       ref.invalidate(posCartProvider(sessionKey: tab.sessionKey));
     }
     ref.invalidate(saleScreenTabsProvider);
+    ref.read(saleScreenUiStateProvider.notifier).clearAll();
+    ref.read(saleScreenMinimizedProvider.notifier).clear();
+  }
+
+  void _handleMinimize() {
+    _persistUiStateForSession(_cartSessionKey);
+    ref.read(saleScreenMinimizedProvider.notifier).markMinimized();
+    returnToTransactionList(context, AppRoutes.home);
   }
 
   Future<void> _handleClose() async {
@@ -276,6 +289,13 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
   Widget build(BuildContext context) {
     final tabsState = ref.watch(saleScreenTabsProvider);
     final sessionKey = tabsState.activeTab.sessionKey;
+
+    ref.listen(saleScreenTabsProvider, (previous, next) {
+      if (previous == null) return;
+      if (previous.activeIndex == next.activeIndex) return;
+      _persistUiStateForSession(previous.activeTab.sessionKey);
+      _restoreUiStateForSession(next.activeTab.sessionKey);
+    });
 
     ref.listen(posCartProvider(sessionKey: sessionKey), (previous, next) {
       if (previous?.customerName == next.customerName) return;
@@ -309,7 +329,10 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SaleScreenTabsBar(onFormClose: () => unawaited(_handleClose())),
+                SaleScreenTabsBar(
+                  onMinimize: _handleMinimize,
+                  onFormClose: () => unawaited(_handleClose()),
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
@@ -328,8 +351,10 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
                       ),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
+                          final contentWidth = constraints.maxWidth;
+                          final contentHeight = constraints.maxHeight;
                           final stackInvoice =
-                              constraints.maxWidth < PosBreakpoints.tablet;
+                              contentWidth < PosBreakpoints.tablet;
                           final catalog = SaleProductPane(
                             query: _query,
                             categoryId: _categoryId,
@@ -340,12 +365,13 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
                             onMoveHighlight: _moveHighlight,
                             onSubmitSearch: _addHighlighted,
                             onClearQuery: _clearQuery,
-                            onCategoryChanged: (categoryId) {
-                              setState(() {
-                                _categoryId = categoryId;
-                                _highlightIndex = 0;
-                              });
-                            },
+                                  onCategoryChanged: (categoryId) {
+                                    setState(() {
+                                      _categoryId = categoryId;
+                                      _highlightIndex = 0;
+                                    });
+                                    _persistUiStateForSession(sessionKey);
+                                  },
                             onItemSelected: _addItem,
                           );
                           final invoice = SaleInvoicePanel(
@@ -358,20 +384,28 @@ class _SaleScreenPageState extends ConsumerState<SaleScreenPage> {
                           );
 
                           if (stackInvoice) {
-                            return Column(
+                            return SizedBox(
+                              width: contentWidth,
+                              height: contentHeight,
+                              child: Column(
+                                children: [
+                                  Expanded(flex: 3, child: catalog),
+                                  Expanded(flex: 2, child: invoice),
+                                ],
+                              ),
+                            );
+                          }
+
+                          return SizedBox(
+                            width: contentWidth,
+                            height: contentHeight,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Expanded(flex: 3, child: catalog),
                                 Expanded(flex: 2, child: invoice),
                               ],
-                            );
-                          }
-
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(flex: 3, child: catalog),
-                              Expanded(flex: 2, child: invoice),
-                            ],
+                            ),
                           );
                         },
                       ),

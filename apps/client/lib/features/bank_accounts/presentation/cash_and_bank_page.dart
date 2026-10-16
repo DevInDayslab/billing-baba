@@ -11,40 +11,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class CashAndBankPage extends ConsumerWidget {
-  const CashAndBankPage({super.key});
+  const CashAndBankPage({this.embeddedInAccountsHub = false, super.key});
+
+  final bool embeddedInAccountsHub;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(bankAccountsStreamProvider);
     final balancesAsync = ref.watch(bankAccountBalancesProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Cash & Bank'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) async {
-              switch (value) {
-                case 'transfer':
-                  await showAccountTransferDialog(context, ref);
-                case 'adjust':
-                  await showAccountAdjustmentDialog(context, ref);
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'transfer', child: Text('Transfer')),
-              PopupMenuItem(value: 'adjust', child: Text('Adjust balance')),
-            ],
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddBankDialog(context, ref),
-        label: const Text('Add bank'),
-        icon: const Icon(Icons.add),
-      ),
-      body: accountsAsync.when(
+    final body = accountsAsync.when(
         data: (accounts) {
           final balanceMap = {
             for (final b in balancesAsync.asData?.value ??
@@ -93,7 +69,48 @@ class CashAndBankPage extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
+      );
+
+    final fab = FloatingActionButton.extended(
+      onPressed: () => _showAddBankDialog(context, ref),
+      label: const Text('Add bank'),
+      icon: const Icon(Icons.add),
+    );
+
+    if (embeddedInAccountsHub) {
+      return ColoredBox(
+        color: AppColors.background,
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          floatingActionButton: fab,
+          body: body,
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Cash & Bank'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              switch (value) {
+                case 'transfer':
+                  await showAccountTransferDialog(context, ref);
+                case 'adjust':
+                  await showAccountAdjustmentDialog(context, ref);
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'transfer', child: Text('Transfer')),
+              PopupMenuItem(value: 'adjust', child: Text('Adjust balance')),
+            ],
+          ),
+        ],
       ),
+      floatingActionButton: fab,
+      body: body,
     );
   }
 

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 const inventoryCardBorder = Color(0xFFE0E0E0);
 
 /// Split workspace chrome — frame + dividers (see [InventorySplitLayout]).
-const inventoryWorkspacePanelBorderWidth = 9.0;
+const inventoryWorkspacePanelBorderWidth = AppSpacing.xs;
 
 BorderSide get inventoryWorkspacePanelBorderSide => BorderSide(
   color: AppColors.workspacePanelBorder,
@@ -29,7 +29,8 @@ BorderRadius inventoryWorkspacePanelInnerRadius() {
 }
 
 const inventoryTabActiveColor = Color(0xFF1565C0);
-const inventoryPrimaryOrange = Color(0xFFFF9800);
+/// Desktop inventory primary CTA (matches parties Add Party button).
+const inventoryPrimaryOrange = Color(0xFFE53935);
 const Color inventorySelectedRowColor = listPanelSelectedRowColor;
 const inventoryNegativeColor = Color(0xFFD32F2F);
 const inventoryPositiveColor = Color(0xFF2E7D32);
