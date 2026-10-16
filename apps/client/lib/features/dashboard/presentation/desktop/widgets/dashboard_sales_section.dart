@@ -66,7 +66,6 @@ class DashboardSalesSection extends StatelessWidget {
               points: sales.trendPoints,
               lineColor: AppColors.primary,
               period: period,
-              minimal: true,
             ),
           ),
           const Spacer(),

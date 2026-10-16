@@ -31,7 +31,6 @@ import 'package:billing_baba/features/tasks/presentation/task_undo_redo_snackbar
 import 'package:billing_baba/features/tasks/presentation/task_undo_redo_shortcuts.dart';
 import 'package:billing_baba/features/search/presentation/desktop/search_dialog.dart';
 import 'package:billing_baba/features/settings/application/general_settings_provider.dart';
-import 'package:billing_baba/shared/widgets/desktop_bidirectional_scroll.dart';
 import 'package:billing_baba/features/utilities/models/utilities_sub_route.dart';
 import 'package:billing_baba/shared/image/image_startup_warmup.dart';
 import 'package:flutter/material.dart';
@@ -1965,19 +1964,25 @@ class _ScaledShellContent extends ConsumerWidget {
 
         final logicalW = viewW / scale;
         final logicalH = viewH / scale;
+        final mediaQuery = MediaQuery.of(context);
 
-        return DesktopBidirectionalScroll(
-          child: Transform.scale(
-            scale: scale,
-            alignment: Alignment.topLeft,
-            filterQuality: FilterQuality.medium,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: logicalW,
-                maxWidth: logicalW,
-                minHeight: logicalH,
+        // FittedBox scales at paint time so layout size stays within the viewport.
+        // Transform.scale was overflowing (blank screens on Settings at 130%).
+        return SizedBox(
+          width: viewW,
+          height: viewH,
+          child: ClipRect(
+            child: FittedBox(
+              fit: BoxFit.contain,
+              alignment: Alignment.topLeft,
+              child: SizedBox(
+                width: logicalW,
+                height: logicalH,
+                child: MediaQuery(
+                  data: mediaQuery.copyWith(size: Size(logicalW, logicalH)),
+                  child: child,
+                ),
               ),
-              child: child,
             ),
           ),
         );

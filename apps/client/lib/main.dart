@@ -25,7 +25,6 @@ Future<void> main() async {
       // TODO: remove before production — temporary BoringSSL cert bypass.
       installSslBypass();
       WindowsCertInjector.injectSystemCertificates();
-      await configureDesktopWindow();
       GoogleFonts.config.allowRuntimeFetching = false;
 
       await dotenv.load();
@@ -75,6 +74,8 @@ Future<void> main() async {
         commandAwareSyncEngineProvider.future,
       );
       await engine.initialize();
+
+      await configureDesktopWindow();
 
       runApp(
         UncontrolledProviderScope(

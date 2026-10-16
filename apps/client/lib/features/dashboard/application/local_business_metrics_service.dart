@@ -173,6 +173,86 @@ class LocalBusinessMetricsService {
     );
   }
 
+  Future<List<DashboardTrendPointModel>> loadSalesTrend(
+    DashboardQuery query,
+  ) async {
+    final businessId = _businessId;
+    if (businessId == null) return const [];
+
+    final range = dateRangeForDashboardPeriod(
+      query.period,
+      from: query.from,
+      to: query.to,
+    );
+    final amountsByDay = <DateTime, double>{};
+
+    for (final type in revenueSalesTypes) {
+      final docs = await _salesLocal.listByType(
+        businessId: businessId,
+        documentType: type,
+      );
+      for (final doc in docs) {
+        if (doc.status != 'finalized') continue;
+        if (!_inRange(doc.documentDate, range)) continue;
+        final day = parseDocumentCalendarDay(doc.documentDate);
+        if (day == null) continue;
+        final key = DateTime(day.year, day.month, day.day);
+        amountsByDay[key] =
+            (amountsByDay[key] ?? 0) + _parseAmount(doc.totalAmount);
+      }
+    }
+
+    final points = amountsByDay.entries
+        .map(
+          (entry) => DashboardTrendPointModel(
+            date: entry.key,
+            amount: entry.value,
+          ),
+        )
+        .toList();
+    points.sort((a, b) => a.date.compareTo(b.date));
+    return points;
+  }
+
+  Future<List<DashboardTrendPointModel>> loadPurchasesTrend(
+    DashboardQuery query,
+  ) async {
+    final businessId = _businessId;
+    if (businessId == null) return const [];
+
+    final range = dateRangeForDashboardPeriod(
+      query.period,
+      from: query.from,
+      to: query.to,
+    );
+    final amountsByDay = <DateTime, double>{};
+
+    final purchaseDocs = await _purchaseLocal.listByType(
+      businessId: businessId,
+      documentType: 'purchase_bill',
+    );
+    for (final doc in purchaseDocs) {
+      if (doc.status != 'finalized') continue;
+      if (!_inRange(doc.documentDate, range)) continue;
+      final day = parseDocumentCalendarDay(doc.documentDate);
+      if (day == null) continue;
+      final key = DateTime(day.year, day.month, day.day);
+      amountsByDay[key] =
+          (amountsByDay[key] ?? 0) + _parseAmount(doc.totalAmount);
+    }
+
+    final points = amountsByDay.entries
+        .map(
+          (entry) => DashboardTrendPointModel(
+            date: entry.key,
+            amount: entry.value,
+          ),
+        )
+        .toList();
+    points.sort((a, b) => a.date.compareTo(b.date));
+    return points;
+  }
+
   int countLowStockItems(List<InventoryItem> items) {
     return items.where(isInventoryLowStock).length;
   }

@@ -1,5 +1,7 @@
 import 'package:billing_baba/features/dashboard/application/local_business_metrics_service.dart';
 import 'package:billing_baba/features/dashboard/models/dashboard_model.dart';
+import 'package:billing_baba/features/dashboard/models/requests/dashboard_requests.dart';
+import 'package:billing_baba/features/dashboard/utils/dashboard_trend_series.dart';
 import 'package:billing_baba/features/inventory/models/item_model.dart';
 
 /// Merges API dashboard payloads with local Drift metrics when the server is empty.
@@ -10,6 +12,9 @@ abstract final class DashboardModelMerger {
     required LocalPeriodMetrics localPeriod,
     required List<InventoryItem> inventoryItems,
     required LocalBusinessMetricsService metrics,
+    required DashboardQuery query,
+    required List<DashboardTrendPointModel> localSalesTrend,
+    required List<DashboardTrendPointModel> localPurchasesTrend,
   }) {
     final lowStockCount = metrics.countLowStockItems(inventoryItems);
     final lowStockItems = metrics.lowStockPreview(inventoryItems);
@@ -18,8 +23,18 @@ abstract final class DashboardModelMerger {
       generatedAt: remote.generatedAt,
       period: remote.period,
       overview: _mergeOverview(remote.overview, localOverview),
-      sales: _mergeSales(remote.sales, localPeriod),
-      purchases: _mergePurchases(remote.purchases, localPeriod),
+      sales: _mergeSales(
+        remote.sales,
+        localPeriod,
+        query: query,
+        localTrend: localSalesTrend,
+      ),
+      purchases: _mergePurchases(
+        remote.purchases,
+        localPeriod,
+        query: query,
+        localTrend: localPurchasesTrend,
+      ),
       finance: _mergeFinance(remote.finance, localPeriod),
       inventory: _mergeInventory(
         remote.inventory,
@@ -54,27 +69,65 @@ abstract final class DashboardModelMerger {
 
   static DashboardSalesModel _mergeSales(
     DashboardSalesModel remote,
-    LocalPeriodMetrics local,
-  ) {
-    if (remote.totalAmount != 0 || local.salesTotal == 0) return remote;
+    LocalPeriodMetrics local, {
+    required DashboardQuery query,
+    required List<DashboardTrendPointModel> localTrend,
+  }) {
+    final merged = remote.totalAmount != 0 || local.salesTotal == 0
+        ? remote
+        : DashboardSalesModel(
+            totalAmount: local.salesTotal,
+            invoiceCount: local.salesCount,
+            receivedAmount: remote.receivedAmount,
+            balanceAmount: remote.balanceAmount,
+            trendPoints: remote.trendPoints,
+          );
+
+    final sparse = DashboardTrendSeries.combineSparseTrendSources(
+      [remote.trendPoints, localTrend],
+      query.period,
+    );
+    final trendPoints = DashboardTrendSeries.normalizeDashboardTrend(
+      sparse,
+      query,
+    );
+
     return DashboardSalesModel(
-      totalAmount: local.salesTotal,
-      invoiceCount: local.salesCount,
-      receivedAmount: remote.receivedAmount,
-      balanceAmount: remote.balanceAmount,
-      trendPoints: remote.trendPoints,
+      totalAmount: merged.totalAmount,
+      invoiceCount: merged.invoiceCount,
+      receivedAmount: merged.receivedAmount,
+      balanceAmount: merged.balanceAmount,
+      trendPoints: trendPoints,
     );
   }
 
   static DashboardPurchasesModel _mergePurchases(
     DashboardPurchasesModel remote,
-    LocalPeriodMetrics local,
-  ) {
-    if (remote.totalAmount != 0 || local.purchaseTotal == 0) return remote;
+    LocalPeriodMetrics local, {
+    required DashboardQuery query,
+    required List<DashboardTrendPointModel> localTrend,
+  }) {
+    final merged = remote.totalAmount != 0 || local.purchaseTotal == 0
+        ? remote
+        : DashboardPurchasesModel(
+            totalAmount: local.purchaseTotal,
+            billCount: local.purchaseCount,
+            trendPoints: remote.trendPoints,
+          );
+
+    final sparse = DashboardTrendSeries.combineSparseTrendSources(
+      [remote.trendPoints, localTrend],
+      query.period,
+    );
+    final trendPoints = DashboardTrendSeries.normalizeDashboardTrend(
+      sparse,
+      query,
+    );
+
     return DashboardPurchasesModel(
-      totalAmount: local.purchaseTotal,
-      billCount: local.purchaseCount,
-      trendPoints: remote.trendPoints,
+      totalAmount: merged.totalAmount,
+      billCount: merged.billCount,
+      trendPoints: trendPoints,
     );
   }
 

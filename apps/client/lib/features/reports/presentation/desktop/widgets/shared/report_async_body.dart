@@ -5,8 +5,8 @@ import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/reports/application/report_filters_provider.dart';
 import 'package:billing_baba/features/reports/application/report_load_helper.dart';
 import 'package:billing_baba/features/reports/application/reports_error_mapper.dart';
+import 'package:billing_baba/features/reports/presentation/desktop/widgets/shared/report_loading_skeleton.dart';
 import 'package:billing_baba/shared/widgets/app_error.dart';
-import 'package:billing_baba/shared/widgets/app_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -118,9 +118,12 @@ class ReportAsyncBody<T> extends ConsumerWidget {
               child: data(previous),
             );
           }
-          return AppLoader(message: loadingMessage);
+          return const ReportLoadingSkeleton();
         },
         error: (error, _) {
+          if (previous == null && ReportsErrorMapper.isTransientLoadError(error)) {
+            return const ReportLoadingSkeleton();
+          }
           if (previous != null) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

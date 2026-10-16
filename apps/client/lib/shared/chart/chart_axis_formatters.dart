@@ -59,7 +59,7 @@ abstract final class ChartAxisFormatters {
 
     final maxValue = values.fold<double>(0, math.max);
     if (maxValue <= 0) {
-      return const ChartYAxisScale(minY: 0, maxY: 1000, interval: 250);
+      return const ChartYAxisScale(minY: 0, maxY: 4, interval: 1);
     }
 
     const targetLines = 4;

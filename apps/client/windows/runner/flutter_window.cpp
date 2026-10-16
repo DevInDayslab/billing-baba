@@ -28,7 +28,9 @@ bool FlutterWindow::OnCreate() {
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+    // SW_SHOWNORMAL would restore the Create() size (1180×700) and undo Dart-side
+    // maximize. Open maximized so the title bar stays visible (not fullscreen).
+    ShowWindow(GetHandle(), SW_SHOWMAXIMIZED);
   });
 
   // Flutter can complete the first frame before the "show window" callback is

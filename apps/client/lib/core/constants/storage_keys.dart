@@ -21,6 +21,8 @@ abstract final class StorageKeys {
   static const partyLocalExtensions = 'party_local_extensions';
   static const pendingPartyOperations = 'pending_party_operations';
   static const partyListFilter = 'party_list_filter';
+  static const partyContactImportBannerDismissed =
+      'party_contact_import_banner_dismissed';
   static const selectedPartyId = 'selected_party_id';
   static const partyGroupNames = 'party_group_names';
   static const partyDetailUpperPaneRatio = 'party_detail_upper_pane_ratio';

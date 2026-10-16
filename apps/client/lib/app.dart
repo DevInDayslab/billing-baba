@@ -39,8 +39,13 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
     super.initState();
     WidgetsBinding.instance.addObserver(_imageMemoryHandler);
     if (AppPlatform.current.isDesktop) {
+      // Runner may show the HWND with SW_SHOWNORMAL on the first frame; retry
+      // maximize on the next frame so startup wins over the default 1180×700 size.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         unawaited(ensureDesktopWindowMaximized());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          unawaited(ensureDesktopWindowMaximized());
+        });
       });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {

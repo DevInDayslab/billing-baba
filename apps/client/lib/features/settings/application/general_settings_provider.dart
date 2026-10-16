@@ -4,6 +4,7 @@ import 'package:billing_baba/features/inventory/application/item_settings_provid
 import 'package:billing_baba/features/inventory/models/item_settings.dart';
 import 'package:billing_baba/features/settings/application/settings_save_feedback.dart';
 import 'package:billing_baba/features/settings/application/settings_save_messages.dart';
+import 'package:billing_baba/features/settings/models/desktop_ui_scale.dart';
 import 'package:billing_baba/features/settings/models/general_settings.dart';
 import 'package:billing_baba/features/settings/repositories/general_settings_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,26 +65,10 @@ final enableGstinOnPartyProvider = Provider<bool>((ref) {
   return ref.watch(generalSettingsProvider).value?.enableGstinOnParty ?? true;
 });
 
-/// Live zoom while dragging the settings slider (before save).
-final desktopUiScalePreviewPercentProvider =
-    NotifierProvider<DesktopUiScalePreviewNotifier, int?>(
-      DesktopUiScalePreviewNotifier.new,
-    );
-
-class DesktopUiScalePreviewNotifier extends Notifier<int?> {
-  @override
-  int? build() => null;
-
-  void setPreview(int? percent) => state = percent;
-}
-
 final desktopUiScaleProvider = Provider<double>((ref) {
-  final preview = ref.watch(desktopUiScalePreviewPercentProvider);
   final percent =
-      preview ??
-      ref.watch(generalSettingsProvider).value?.desktopUiScalePercent ??
-      100;
-  return percent.clamp(70, 130) / 100.0;
+      ref.watch(generalSettingsProvider).value?.desktopUiScalePercent ?? 100;
+  return DesktopUiScale.scaleFactorForPercent(percent);
 });
 
 class GeneralSettingsNotifier extends AsyncNotifier<GeneralSettings> {
@@ -92,11 +77,16 @@ class GeneralSettingsNotifier extends AsyncNotifier<GeneralSettings> {
     ref.watch(currentBusinessProvider);
     final repo = await ref.watch(generalSettingsRepositoryProvider.future);
     final loaded = await repo.load();
+    final normalized = loaded.copyWith(
+      desktopUiScalePercent: DesktopUiScale.normalizePercent(
+        loaded.desktopUiScalePercent,
+      ),
+    );
     final businessId = ref.read(currentBusinessProvider)?.id ?? '';
-    if (loaded.selectedFirmBusinessId.isEmpty && businessId.isNotEmpty) {
-      return loaded.copyWith(selectedFirmBusinessId: businessId);
+    if (normalized.selectedFirmBusinessId.isEmpty && businessId.isNotEmpty) {
+      return normalized.copyWith(selectedFirmBusinessId: businessId);
     }
-    return loaded;
+    return normalized;
   }
 
   Future<void> patch(

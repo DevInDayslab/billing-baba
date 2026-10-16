@@ -1,4 +1,5 @@
 import 'package:billing_baba/core/router/app_routes.dart';
+import 'package:billing_baba/features/settings/models/desktop_ui_scale.dart';
 
 typedef GeneralSettingsUpdater = GeneralSettings Function(GeneralSettings s);
 
@@ -105,9 +106,10 @@ class GeneralSettings {
       godownStockTransferEnabled:
           json['godownStockTransferEnabled'] as bool? ??
           defaults.godownStockTransferEnabled,
-      desktopUiScalePercent:
-          (json['desktopUiScalePercent'] as num?)?.toInt() ??
-          defaults.desktopUiScalePercent,
+      desktopUiScalePercent: DesktopUiScale.normalizePercent(
+        (json['desktopUiScalePercent'] as num?)?.toInt() ??
+            defaults.desktopUiScalePercent,
+      ),
     );
   }
 

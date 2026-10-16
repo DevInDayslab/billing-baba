@@ -1,12 +1,12 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/features/parties/application/party_contact_import_service.dart';
 import 'package:billing_baba/features/parties/models/party_contact_import_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 /// Starts a contact import session and polls until the phone submits contacts.
 /// Returns session id when [status] is `submitted`, or null if dismissed.
@@ -114,7 +114,10 @@ class _PartyContactImportQrDialogState
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (session != null) _QrImage(dataUrl: session.qrDataUrl),
+                  if (session != null)
+                    _PartyContactImportQr(
+                      url: AppConfig.partyContactImportWebUrl(session.token),
+                    ),
                   const SizedBox(height: AppSpacing.md),
                   const Text(
                     'Or open the link we\'ve sent on your WhatsApp/SMS.',
@@ -148,41 +151,18 @@ class _PartyContactImportQrDialogState
   }
 }
 
-/// API returns a PNG [data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs);
-/// [Image.network] does not decode those on desktop, so render from bytes instead.
-class _QrImage extends StatelessWidget {
-  const _QrImage({required this.dataUrl});
+class _PartyContactImportQr extends StatelessWidget {
+  const _PartyContactImportQr({required this.url});
 
-  final String dataUrl;
+  final String url;
 
   @override
   Widget build(BuildContext context) {
-    final bytes = _decodeDataUrlImage(dataUrl);
-    if (bytes == null) {
-      return const SizedBox(
-        width: 240,
-        height: 240,
-        child: Center(
-          child: Text(
-            'Could not display QR code',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.error, fontSize: 13),
-          ),
-        ),
-      );
-    }
-    return Image.memory(bytes, width: 240, height: 240, fit: BoxFit.contain);
-  }
-
-  static Uint8List? _decodeDataUrlImage(String dataUrl) {
-    const prefix = 'data:image';
-    if (!dataUrl.startsWith(prefix)) return null;
-    final comma = dataUrl.indexOf(',');
-    if (comma < 0) return null;
-    try {
-      return base64Decode(dataUrl.substring(comma + 1));
-    } on FormatException {
-      return null;
-    }
+    return QrImageView(
+      data: url,
+      size: 240,
+      backgroundColor: Colors.white,
+      errorCorrectionLevel: QrErrorCorrectLevel.M,
+    );
   }
 }
