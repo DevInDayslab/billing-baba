@@ -32,7 +32,8 @@ abstract final class AppRoutes {
   static const saleEstimateQuotation = '/sale/estimate-quotation';
   static const saleProformaInvoice = '/sale/proforma-invoice';
   static const salePaymentIn = '/sale/payment-in';
-  static const saleCashAndBank = '/sale/cash-and-bank';
+  static const otherProductsAccounts = '/other-products/accounts';
+  static const saleCashAndBank = '$otherProductsAccounts/cash-and-bank';
   static const addPaymentIn = '/sale/add-payment-in';
   static const saleOrder = '/sale/order';
   static const addSaleOrder = '/sale/add-order';
@@ -44,9 +45,9 @@ abstract final class AppRoutes {
   static const addJobWork = '/sale/add-job-work';
   static const editJobWork = '/sale/edit-job-work';
   static const saleReturnCreditNote = '/sale/return-credit-note';
-  static const otherIncome = '/sale/other-income';
-  static const addOtherIncome = '/sale/add-other-income';
-  static const editOtherIncome = '/sale/edit-other-income';
+  static const otherIncome = '$otherProductsAccounts/other-income';
+  static const addOtherIncome = '$otherProductsAccounts/add-other-income';
+  static const editOtherIncome = '$otherProductsAccounts/edit-other-income';
   static const saleFa = '/sale/fa';
   static const addSaleFa = '/sale/add-fa';
   static const editSaleFa = '/sale/edit-fa';
@@ -80,11 +81,22 @@ abstract final class AppRoutes {
   static const addExpense = '/purchase/add-expense';
   static const editExpense = '/purchase/edit-expense';
   static const editDebitNote = '/purchase/edit-debit-note';
-  static const loanAccounts = '/purchase/loan-accounts';
-  static const loanAccountDetail = '/purchase/loan-accounts/detail';
-  static const addLoanAccount = '/purchase/add-loan-account';
-  static const editLoanAccount = '/purchase/edit-loan-account';
-  static const addLoanTransaction = '/purchase/add-loan-transaction';
+  static const loanAccounts = '$otherProductsAccounts/loan-accounts';
+  static const loanAccountDetail = '$otherProductsAccounts/loan-accounts/detail';
+  static const addLoanAccount = '$otherProductsAccounts/add-loan-account';
+  static const editLoanAccount = '$otherProductsAccounts/edit-loan-account';
+  static const addLoanTransaction = '$otherProductsAccounts/add-loan-transaction';
+
+  /// Legacy sale/purchase paths (redirected in [app_route_table]).
+  static const legacyOtherIncome = '/sale/other-income';
+  static const legacySaleCashAndBank = '/sale/cash-and-bank';
+  static const legacyLoanAccounts = '/purchase/loan-accounts';
+  static const legacyAddOtherIncome = '/sale/add-other-income';
+  static const legacyEditOtherIncome = '/sale/edit-other-income';
+  static const legacyAddLoanAccount = '/purchase/add-loan-account';
+  static const legacyEditLoanAccount = '/purchase/edit-loan-account';
+  static const legacyAddLoanTransaction = '/purchase/add-loan-transaction';
+  static const legacyLoanAccountDetail = '/purchase/loan-accounts/detail';
   static const reports = '/reports';
   static const reportsDashboard = '/reports/dashboard';
   static const reportsSales = '/reports/sales';
@@ -104,6 +116,7 @@ abstract final class AppRoutes {
   static const utilitiesBulkUpdateItems = '/utilities/bulk-update-items';
   static const utilitiesBarcodeGenerator = '/utilities/barcode-generator';
   static const utilitiesRecycleBin = '/utilities/recycle-bin';
+  static const otherProducts = '/other-products';
   static const developer = '/developer';
   static const developerDiagnostics = '/developer/diagnostics';
   static const developerComponents = '/developer/components';

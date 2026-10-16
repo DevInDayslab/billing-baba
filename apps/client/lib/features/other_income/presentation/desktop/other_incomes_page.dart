@@ -1,6 +1,6 @@
 import 'package:billing_baba/core/router/app_routes.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
-import 'package:billing_baba/features/inventory/presentation/desktop/widgets/inventory_styles.dart';
+import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/dashboard_typography.dart';
 import 'package:billing_baba/features/other_income/application/other_incomes_provider.dart';
 import 'package:billing_baba/features/other_income/presentation/desktop/widgets/other_income_category_tab_content.dart';
 import 'package:billing_baba/features/other_income/presentation/desktop/widgets/other_income_items_tab_content.dart';
@@ -12,7 +12,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 const _successSnackBarColor = Color(0xFF2E7D32);
 
 class DesktopOtherIncomesPage extends ConsumerStatefulWidget {
-  const DesktopOtherIncomesPage({super.key});
+  const DesktopOtherIncomesPage({this.embeddedInAccountsHub = false, super.key});
+
+  final bool embeddedInAccountsHub;
 
   @override
   ConsumerState<DesktopOtherIncomesPage> createState() => _OtherIncomesPageState();
@@ -78,6 +80,38 @@ class _OtherIncomesPageState extends ConsumerState<DesktopOtherIncomesPage>
       }
     });
 
+    final tabViews = TabBarView(
+      controller: _tabController,
+      physics: const NeverScrollableScrollPhysics(),
+      children: const [
+        OtherIncomeCategoryTabContent(),
+        OtherIncomeItemsTabContent(),
+      ],
+    );
+
+    final asyncTabContent = OtherIncomeSectionAsyncContent(
+      expand: true,
+      value: expensesAsync,
+      onRetry: () {
+        ref.read(incomeCategoriesProvider.notifier).refresh();
+        ref.read(otherIncomeTransactionsProvider.notifier).refresh();
+      },
+      builder: (_) => tabViews,
+    );
+
+    if (widget.embeddedInAccountsHub) {
+      return ColoredBox(
+        color: AppColors.background,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _EmbeddedOtherIncomeViewToggle(),
+            Expanded(child: asyncTabContent),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Padding(
@@ -89,56 +123,73 @@ class _OtherIncomesPageState extends ConsumerState<DesktopOtherIncomesPage>
               currentRoute: AppRoutes.otherIncome,
             ),
             Expanded(
-              child: OtherIncomeSectionAsyncContent(
-                expand: true,
-                value: expensesAsync,
-                onRetry: () {
-                  ref.read(incomeCategoriesProvider.notifier).refresh();
-                  ref.read(otherIncomeTransactionsProvider.notifier).refresh();
-                },
-                builder: (_) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: AppSpacing.md),
-                    TabBar(
-                      controller: _tabController,
-                      isScrollable: true,
-                      tabAlignment: TabAlignment.start,
-                      labelColor: inventoryTabActiveColor,
-                      unselectedLabelColor: AppColors.textSecondary,
-                      indicatorColor: inventoryTabActiveColor,
-                      indicatorWeight: 3,
-                      dividerColor: inventoryCardBorder,
-                      labelStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                      ),
-                      tabs: const [
-                        Tab(text: 'CATEGORY'),
-                        Tab(text: 'ITEMS'),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: const [
-                          OtherIncomeCategoryTabContent(),
-                          OtherIncomeItemsTabContent(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: AppSpacing.md),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: _OtherIncomeCategoryItemsToggle(),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Expanded(child: asyncTabContent),
+                ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmbeddedOtherIncomeViewToggle extends StatelessWidget {
+  const _EmbeddedOtherIncomeViewToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(bottom: BorderSide(color: DashboardColors.border)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: _OtherIncomeCategoryItemsToggle(),
+        ),
+      ),
+    );
+  }
+}
+
+class _OtherIncomeCategoryItemsToggle extends ConsumerWidget {
+  const _OtherIncomeCategoryItemsToggle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(otherIncomeTabIndexProvider);
+
+    return SegmentedButton<int>(
+      segments: const [
+        ButtonSegment(value: 0, label: Text('Category')),
+        ButtonSegment(value: 1, label: Text('Items')),
+      ],
+      selected: {selected},
+      onSelectionChanged: (selection) {
+        if (selection.isEmpty) return;
+        ref.read(otherIncomeTabIndexProvider.notifier).tabIndex =
+            selection.first;
+      },
+      style: ButtonStyle(
+        visualDensity: VisualDensity.compact,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: WidgetStatePropertyAll(
+          DashboardTypography.tabLabel.copyWith(fontSize: 13),
         ),
       ),
     );

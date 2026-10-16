@@ -12,15 +12,14 @@ import 'package:billing_baba/features/collaboration/application/navigation_permi
 import 'package:billing_baba/features/collaboration/application/permission_service.dart';
 import 'package:billing_baba/features/collaboration/application/permission_service_provider.dart';
 import 'package:billing_baba/features/collaboration/models/collaboration_sub_route.dart';
-import 'package:billing_baba/features/crm/models/crm_sub_route.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_executor.dart';
 import 'package:billing_baba/features/dashboard/application/quick_create_menu_provider.dart';
 import 'package:billing_baba/features/dashboard/application/shell_sidebar_provider.dart';
 import 'package:billing_baba/features/dashboard/models/quick_create_action.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/app_top_bar.dart';
 import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/quick_create_menu.dart';
+import 'package:billing_baba/features/other_products/models/other_product_sub_route.dart';
 import 'package:billing_baba/features/parties/parties_navigation.dart';
-import 'package:billing_baba/features/pos/application/pos_session_provider.dart';
 import 'package:billing_baba/features/purchases/models/purchase_sub_route.dart';
 import 'package:billing_baba/features/sales/models/sale_sub_route.dart';
 import 'package:billing_baba/features/search/application/search_dialog_provider.dart';
@@ -60,7 +59,7 @@ abstract final class _SidebarTokens {
   static const reports = Color(0xFF3B82F6);
   static const sync = Color(0xFFA78BFA);
   static const utilities = Color(0xFFFBBF24);
-  static const developer = Color(0xFFC4B5FD);
+  static const otherProducts = Color(0xFF38BDF8);
   static const settings = Color(0xFF94A3B8);
   static const plans = Color(0xFFF472B6);
   static const saleScreen = Color(0xFF60A5FA);
@@ -82,8 +81,11 @@ String _searchShortcutBadge() {
   return AppPlatform.current.isMacOS ? '⌘F' : 'Ctrl+F';
 }
 
-/// Expanded desktop sidebar width — fits longest nav labels (e.g. Purchase & Expense).
-const _desktopSidebarExpandedWidth = 256.0;
+/// Expanded desktop sidebar width — fits longest nav label + chevron with minimal gutters.
+const _desktopSidebarExpandedWidth = 224.0;
+
+const _sidebarTileMarginH = AppSpacing.sm;
+const _sidebarNavPaddingH = AppSpacing.sm;
 
 /// Desktop app shell with collapsible sidebar and top action bar.
 class DesktopShell extends ConsumerStatefulWidget {
@@ -113,14 +115,10 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
   bool _isSaleExpanded = false;
   bool _isPurchaseExpanded = false;
   bool _expandInitialized = false;
-  bool _isCrmExpanded = false;
-  bool _crmExpandInitialized = false;
   bool _isUtilitiesExpanded = false;
   bool _utilitiesExpandInitialized = false;
   bool _isCollaborationExpanded = false;
   bool _collaborationExpandInitialized = false;
-  bool _isDeveloperExpanded = false;
-  bool _developerExpandInitialized = false;
   bool? _wasOverlaySidebar;
   bool _useOverlaySidebar = false;
   String? _lastRecordedSearchRoute;
@@ -184,13 +182,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         _isPurchaseExpanded = true;
       }
     }
-    if (!_crmExpandInitialized) {
-      _crmExpandInitialized = true;
-      final location = GoRouterState.of(context).uri.path;
-      if (location.startsWith(AppRoutes.crm)) {
-        _isCrmExpanded = true;
-      }
-    }
     if (!_utilitiesExpandInitialized) {
       _utilitiesExpandInitialized = true;
       final location = GoRouterState.of(context).uri.path;
@@ -205,23 +196,12 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         _isCollaborationExpanded = true;
       }
     }
-    if (!_developerExpandInitialized) {
-      _developerExpandInitialized = true;
-      final location = GoRouterState.of(context).uri.path;
-      if (location.startsWith(AppRoutes.developer)) {
-        _isDeveloperExpanded = true;
-      }
-    }
   }
 
   static bool _isSettingsLocation(String location) {
     return location.startsWith(AppRoutes.settings) ||
         location == AppRoutes.itemsSettings;
   }
-
-  static final List<_NavSubItem> _crmSubItems = CrmSubRoutes.items
-      .map((item) => _NavSubItem(route: item.route, label: item.label))
-      .toList();
 
   static final List<_NavSubItem> _saleSubItems = SaleSubRoutes.items
       .where(
@@ -244,21 +224,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       .map((item) => _NavSubItem(route: item.route, label: item.label))
       .toList();
 
-  static final List<_NavSubItem> _developerSubItems = [
-    const _NavSubItem(
-      route: AppRoutes.developerComponents,
-      label: 'Components',
-    ),
-    const _NavSubItem(
-      route: AppRoutes.developerComponentsTableFilters,
-      label: 'Table Filters',
-    ),
-    const _NavSubItem(
-      route: AppRoutes.developerDiagnostics,
-      label: 'Diagnostics',
-    ),
-  ];
-
   List<_NavItem> get _allNavItems => [
     const _NavItem(
       route: AppRoutes.home,
@@ -271,14 +236,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       icon: LucideIcons.users,
       iconColor: _SidebarTokens.parties,
       label: 'Parties',
-    ),
-    _NavItem(
-      icon: LucideIcons.heartHandshake,
-      iconColor: _SidebarTokens.crm,
-      label: 'CRM',
-      isExpandable: true,
-      routePrefix: AppRoutes.crm,
-      subItems: _crmSubItems,
     ),
     const _NavItem(
       route: AppRoutes.items,
@@ -296,7 +253,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     ),
     if (!ShellSidebarVisibility.hidePos)
       const _NavItem(
-        route: AppRoutes.pos,
+        route: AppRoutes.saleScreen,
         icon: Icons.point_of_sale_outlined,
         iconColor: _SidebarTokens.pos,
         label: 'POS',
@@ -333,15 +290,12 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
         routePrefix: AppRoutes.utilities,
         subItems: _utilitiesSubItems,
       ),
-    if (!ShellSidebarVisibility.hideDeveloper)
-      _NavItem(
-        icon: LucideIcons.code,
-        iconColor: _SidebarTokens.developer,
-        label: 'Developer',
-        isExpandable: true,
-        routePrefix: AppRoutes.developer,
-        subItems: _developerSubItems,
-      ),
+    const _NavItem(
+      route: AppRoutes.otherProducts,
+      icon: LucideIcons.boxes,
+      iconColor: _SidebarTokens.otherProducts,
+      label: 'Other Products',
+    ),
     if (!ShellSidebarVisibility.hideSettings)
       const _NavItem(
         route: AppRoutes.settingsGeneral,
@@ -354,12 +308,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       icon: LucideIcons.award,
       iconColor: _SidebarTokens.plans,
       label: 'Plans & Pricing',
-    ),
-    const _NavItem(
-      route: AppRoutes.saleScreen,
-      icon: LucideIcons.layoutGrid,
-      iconColor: _SidebarTokens.saleScreen,
-      label: 'Sale Screen',
     ),
   ];
 
@@ -429,10 +377,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     setState(() {
       _isSaleExpanded = _isSaleGroupLocation(route);
       _isPurchaseExpanded = route.startsWith(AppRoutes.purchase);
-      _isCrmExpanded = route.startsWith(AppRoutes.crm);
       _isUtilitiesExpanded = route.startsWith(AppRoutes.utilities);
       _isCollaborationExpanded = route.startsWith(AppRoutes.collaboration);
-      _isDeveloperExpanded = route.startsWith(AppRoutes.developer);
     });
     context.go(route);
     _scheduleSidebarCloseAfterNavigation(
@@ -505,9 +451,7 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             }
             _wasOverlaySidebar = useOverlaySidebar;
 
-            final showTopBar =
-                currentLocation != AppRoutes.pos ||
-                !ref.watch(posSessionProvider).isTerminalOpen;
+            const showTopBar = true;
             final mainContent = _ShellShortcutScope(
               quickCreateEnabled: showTopBar,
               shortcutFocusNode: _shellShortcutFocusNode,
@@ -760,38 +704,28 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     if (item.isExpandable) {
       final isSale = item.routePrefix == AppRoutes.sale;
       final isPurchase = item.routePrefix == AppRoutes.purchase;
-      final isCrm = item.routePrefix == AppRoutes.crm;
       final isUtilities = item.routePrefix == AppRoutes.utilities;
       final isCollaboration = item.routePrefix == AppRoutes.collaboration;
-      final isDeveloper = item.routePrefix == AppRoutes.developer;
       final routePrefix = item.routePrefix ?? item.route!;
 
       final isParentActive = isSale
           ? _isSaleGroupLocation(currentLocation)
           : isPurchase
           ? currentLocation.startsWith(AppRoutes.purchase)
-          : isCrm
-          ? currentLocation.startsWith(AppRoutes.crm)
           : isUtilities
           ? currentLocation.startsWith(AppRoutes.utilities)
           : isCollaboration
           ? currentLocation.startsWith(AppRoutes.collaboration)
-          : isDeveloper
-          ? currentLocation.startsWith(AppRoutes.developer)
           : false;
 
       final isExpanded = isSale
           ? _isSaleExpanded
           : isPurchase
           ? _isPurchaseExpanded
-          : isCrm
-          ? _isCrmExpanded
           : isUtilities
           ? _isUtilitiesExpanded
           : isCollaboration
           ? _isCollaborationExpanded
-          : isDeveloper
-          ? _isDeveloperExpanded
           : false;
 
       return Column(
@@ -808,14 +742,10 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                 _isSaleExpanded = !_isSaleExpanded;
               } else if (isPurchase) {
                 _isPurchaseExpanded = !_isPurchaseExpanded;
-              } else if (isCrm) {
-                _isCrmExpanded = !_isCrmExpanded;
               } else if (isUtilities) {
                 _isUtilitiesExpanded = !_isUtilitiesExpanded;
               } else if (isCollaboration) {
                 _isCollaborationExpanded = !_isCollaborationExpanded;
-              } else if (isDeveloper) {
-                _isDeveloperExpanded = !_isDeveloperExpanded;
               }
             }),
             onCollapsedTap: () {
@@ -825,14 +755,10 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
                   _isSaleExpanded = true;
                 } else if (isPurchase) {
                   _isPurchaseExpanded = true;
-                } else if (isCrm) {
-                  _isCrmExpanded = true;
                 } else if (isUtilities) {
                   _isUtilitiesExpanded = true;
                 } else if (isCollaboration) {
                   _isCollaborationExpanded = true;
-                } else if (isDeveloper) {
-                  _isDeveloperExpanded = true;
                 }
               });
             },
@@ -862,7 +788,9 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
             (item.route == AppRoutes.reports &&
                 currentLocation.startsWith(AppRoutes.reports)) ||
             (item.route == AppRoutes.settingsGeneral &&
-                _isSettingsLocation(currentLocation)));
+                _isSettingsLocation(currentLocation)) ||
+            (item.route == AppRoutes.otherProducts &&
+                OtherProductSubRoutes.matchesLocation(currentLocation)));
 
     return _SidebarNavTile(
       item: item,
@@ -921,11 +849,6 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
       if (subRoute == AppRoutes.saleJobWorkOut &&
           (currentLocation == AppRoutes.addJobWork ||
               currentLocation.startsWith('${AppRoutes.editJobWork}/'))) {
-        return true;
-      }
-      if (subRoute == AppRoutes.otherIncome &&
-          (currentLocation == AppRoutes.addOtherIncome ||
-              currentLocation.startsWith('${AppRoutes.editOtherIncome}/'))) {
         return true;
       }
     }
@@ -1145,6 +1068,7 @@ class _NavItem {
     this.routePrefix,
     this.isExpandable = false,
     this.subItems = const [],
+    this.trailingLabel,
   });
 
   final IconData icon;
@@ -1154,6 +1078,7 @@ class _NavItem {
   final String? routePrefix;
   final bool isExpandable;
   final List<_NavSubItem> subItems;
+  final String? trailingLabel;
 }
 
 class _NavSubItem {
@@ -1185,7 +1110,7 @@ class _SidebarTileSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
+        horizontal: _sidebarTileMarginH,
         vertical: 2,
       ),
       child: DecoratedBox(
@@ -1211,7 +1136,7 @@ class _SidebarTileSurface extends StatelessWidget {
               ),
               child: Padding(
                 padding: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding ?? AppSpacing.md,
+                  horizontal: horizontalPadding ?? _sidebarNavPaddingH,
                   vertical: verticalPadding ?? AppSpacing.sm + 2,
                 ),
                 child: child,
@@ -1251,7 +1176,7 @@ class _SidebarExpandableNavTile extends StatelessWidget {
     return _SidebarTileSurface(
       isActive: isActive,
       onTap: collapsed ? onCollapsedTap : onToggle,
-      horizontalPadding: collapsed ? 4 : AppSpacing.md,
+      horizontalPadding: collapsed ? 4 : _sidebarNavPaddingH,
       child: collapsed
           ? Center(
               child: FittedBox(
@@ -1280,6 +1205,7 @@ class _SidebarExpandableNavTile extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.15,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -1359,7 +1285,7 @@ class _SidebarNavTile extends StatelessWidget {
     return _SidebarTileSurface(
       isActive: isActive,
       onTap: onTap,
-      horizontalPadding: collapsed ? 4 : AppSpacing.md,
+      horizontalPadding: collapsed ? 4 : _sidebarNavPaddingH,
       child: collapsed
           ? Center(
               child: FittedBox(
@@ -1379,7 +1305,8 @@ class _SidebarNavTile extends StatelessWidget {
                   size: AppIconSize.md,
                 ),
                 const SizedBox(width: AppSpacing.sm + 4),
-                Expanded(
+                Flexible(
+                  fit: FlexFit.loose,
                   child: Text(
                     item.label,
                     style: TextStyle(
@@ -1388,9 +1315,24 @@ class _SidebarNavTile extends StatelessWidget {
                       fontWeight: FontWeight.w500,
                       letterSpacing: 0.15,
                     ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
+                if (item.trailingLabel != null) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    item.trailingLabel!,
+                    style: TextStyle(
+                      color: isActive
+                          ? _SidebarTokens.textActive.withValues(alpha: 0.85)
+                          : _SidebarTokens.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                  ),
+                ],
               ],
             ),
     );
@@ -1502,7 +1444,9 @@ class _SidebarProfileFooterState extends State<_SidebarProfileFooter> {
           onTap: widget.collapsed ? widget.onExpand : _toggleMenu,
           child: Container(
             padding: EdgeInsets.symmetric(
-              horizontal: widget.collapsed ? AppSpacing.sm : AppSpacing.md,
+              horizontal: widget.collapsed
+                  ? AppSpacing.sm
+                  : _sidebarNavPaddingH + _sidebarTileMarginH,
               vertical: AppSpacing.md,
             ),
             decoration: const BoxDecoration(

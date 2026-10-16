@@ -7,6 +7,7 @@ import 'package:billing_baba/core/logging/device_info_collector.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/pinned_api_http_client.dart';
 import 'package:billing_baba/core/network/windows_cert_injector.dart';
+import 'package:billing_baba/core/platform/desktop_app_instance.dart';
 import 'package:billing_baba/core/platform/desktop_window_config.dart';
 import 'package:billing_baba/core/providers/storage_service_provider.dart';
 import 'package:billing_baba/features/auth/services/otp_service.dart';
@@ -76,6 +77,7 @@ Future<void> main() async {
       await engine.initialize();
 
       await configureDesktopWindow();
+      await DesktopAppInstance.register();
 
       runApp(
         UncontrolledProviderScope(

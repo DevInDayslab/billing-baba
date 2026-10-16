@@ -211,98 +211,103 @@ class _ItemsTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const headerStyle = TextStyle(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _ReceiptItemLineRow(
+          item: 'Item',
+          qty: 'Qty',
+          rate: 'Rate',
+          total: 'Total',
+          isHeader: true,
+        ),
+        for (final item in items)
+          _ReceiptItemLineRow(
+            item: item.name,
+            qty: '${item.quantity}',
+            rate: _currencyFormat.format(_rateFor(item)),
+            total: _currencyFormat.format(item.lineTotal),
+            emphasizeTotal: true,
+          ),
+      ],
+    );
+  }
+
+  static double _rateFor(PosSaleLineItem item) {
+    if (item.unitPrice != null) return item.unitPrice!;
+    if (item.quantity <= 0) return 0;
+    return item.lineTotal / item.quantity;
+  }
+}
+
+/// Fixed-width numeric columns so qty / rate / total do not crowd together.
+class _ReceiptItemLineRow extends StatelessWidget {
+  const _ReceiptItemLineRow({
+    required this.item,
+    required this.qty,
+    required this.rate,
+    required this.total,
+    this.isHeader = false,
+    this.emphasizeTotal = false,
+  });
+
+  final String item;
+  final String qty;
+  final String rate;
+  final String total;
+  final bool isHeader;
+  final bool emphasizeTotal;
+
+  static const _qtyWidth = 40.0;
+  static const _rateWidth = 80.0;
+  static const _totalWidth = 92.0;
+  static const _columnGap = 10.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final headerStyle = const TextStyle(
       fontSize: 11,
       fontWeight: FontWeight.w600,
       color: AppColors.textSecondary,
     );
-    const cellStyle = TextStyle(
+    final cellStyle = TextStyle(
       fontSize: 12,
+      fontWeight: emphasizeTotal ? FontWeight.w600 : FontWeight.w400,
       color: AppColors.textPrimary,
     );
+    final style = isHeader ? headerStyle : cellStyle;
 
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(3),
-        1: IntrinsicColumnWidth(),
-        2: IntrinsicColumnWidth(),
-        3: IntrinsicColumnWidth(),
-      },
-      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-      children: [
-        const TableRow(
-          children: [
-            Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: Text('Item', style: headerStyle),
+    return Padding(
+      padding: isHeader
+          ? const EdgeInsets.only(bottom: 6)
+          : const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              item,
+              style: style,
+              maxLines: isHeader ? 1 : 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: Text(
-                'Qty',
-                style: headerStyle,
-                textAlign: TextAlign.right,
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: Text(
-                'Rate',
-                style: headerStyle,
-                textAlign: TextAlign.right,
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: Text(
-                'Total',
-                style: headerStyle,
-                textAlign: TextAlign.right,
-              ),
-            ),
-          ],
-        ),
-        for (final item in items)
-          TableRow(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  item.name,
-                  style: cellStyle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  '${item.quantity}',
-                  style: cellStyle,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  _currencyFormat.format(
-                    item.quantity > 0 ? item.lineTotal / item.quantity : 0,
-                  ),
-                  style: cellStyle,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  _currencyFormat.format(item.lineTotal),
-                  style: cellStyle.copyWith(fontWeight: FontWeight.w600),
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
           ),
-      ],
+          SizedBox(
+            width: _qtyWidth,
+            child: Text(qty, style: style, textAlign: TextAlign.right),
+          ),
+          const SizedBox(width: _columnGap),
+          SizedBox(
+            width: _rateWidth,
+            child: Text(rate, style: style, textAlign: TextAlign.right),
+          ),
+          const SizedBox(width: _columnGap),
+          SizedBox(
+            width: _totalWidth,
+            child: Text(total, style: style, textAlign: TextAlign.right),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:billing_baba/features/pos/application/pos_cart_provider.dart';
 import 'package:billing_baba/features/pos/application/pos_cart_state.dart';
 import 'package:billing_baba/features/pos/models/held_bill.dart';
 import 'package:billing_baba/features/pos/presentation/desktop/widgets/pos_styles.dart';
+import 'package:billing_baba/features/sale_screen/application/sale_screen_held_bill_resume.dart';
 import 'package:billing_baba/shared/widgets/list_panel_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,21 +18,54 @@ final _currencyFormat = NumberFormat.currency(
 final _timeFormat = DateFormat('dd MMM yyyy, hh:mm a');
 
 class HoldBillsPanel extends ConsumerWidget {
-  const HoldBillsPanel({super.key});
+  const HoldBillsPanel({
+    this.cartSessionKey = defaultPosCartSessionKey,
+    super.key,
+  });
 
-  static Future<void> show(BuildContext context) {
+  final String cartSessionKey;
+
+  static Future<void> show(
+    BuildContext context, {
+    String cartSessionKey = defaultPosCartSessionKey,
+  }) {
     return showDialog<void>(
       context: context,
-      builder: (context) => const HoldBillsPanel(),
+      builder: (context) => HoldBillsPanel(cartSessionKey: cartSessionKey),
     );
   }
+
+  PosCartProvider _cartProvider(WidgetRef ref) =>
+      posCartProvider(sessionKey: cartSessionKey);
 
   Future<void> _resumeBill(
     BuildContext context,
     WidgetRef ref,
     HeldBill bill,
   ) async {
-    final cart = ref.read(posCartProvider());
+    if (isSaleScreenCartSessionKey(cartSessionKey)) {
+      final targetKey = allocateSaleScreenSessionForHeldBillResume(ref);
+      if (targetKey == null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Current bill is not empty and the maximum number of POS tabs is open.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      resumeHeldBillOnSaleScreenSession(
+        ref,
+        sessionKey: targetKey,
+        bill: bill,
+      );
+      return;
+    }
+
+    final cart = ref.read(_cartProvider(ref));
     if (cart.items.isNotEmpty) {
       final confirmed = await showDialog<bool>(
         context: context,
@@ -53,7 +87,41 @@ class HoldBillsPanel extends ConsumerWidget {
       if (confirmed != true || !context.mounted) return;
     }
 
-    ref.read(posCartProvider().notifier).resumeBill(bill);
+    ref.read(_cartProvider(ref).notifier).resumeBill(bill);
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _resumeAllBills(BuildContext context, WidgetRef ref) async {
+    if (!isSaleScreenCartSessionKey(cartSessionKey)) return;
+
+    final bills = List<HeldBill>.from(ref.read(_cartProvider(ref)).heldBills);
+    if (bills.isEmpty) return;
+
+    var opened = 0;
+    for (final bill in bills) {
+      final targetKey = allocateSaleScreenSessionForHeldBillResume(ref);
+      if (targetKey == null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Opened $opened of ${bills.length} bills. '
+              'Close a tab or clear a bill to resume the rest.',
+            ),
+          ),
+        );
+        break;
+      }
+      resumeHeldBillOnSaleScreenSession(
+        ref,
+        sessionKey: targetKey,
+        bill: bill,
+      );
+      opened += 1;
+    }
+
     if (context.mounted) {
       Navigator.of(context).pop();
     }
@@ -83,13 +151,16 @@ class HoldBillsPanel extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
-      await ref.read(posCartProvider().notifier).discardHeldBill(billId);
+      await ref.read(_cartProvider(ref).notifier).discardHeldBill(billId);
+      if (isSaleScreenCartSessionKey(cartSessionKey)) {
+        syncSaleScreenHeldBills(ref);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final heldBills = ref.watch(posCartProvider()).heldBills;
+    final heldBills = ref.watch(_cartProvider(ref)).heldBills;
 
     return Dialog(
       backgroundColor: AppColors.surface,
@@ -112,6 +183,16 @@ class HoldBillsPanel extends ConsumerWidget {
                     style: PosStyles.panelTitleStyle,
                   ),
                   const Spacer(),
+                  if (isSaleScreenCartSessionKey(cartSessionKey) &&
+                      heldBills.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(right: AppSpacing.sm),
+                      child: FilledButton(
+                        onPressed: () => _resumeAllBills(context, ref),
+                        style: PosButtonStyles.primaryFilled,
+                        child: const Text('Resume all'),
+                      ),
+                    ),
                   IconButton(
                     icon: const Icon(Icons.close),
                     color: AppColors.textSecondary,

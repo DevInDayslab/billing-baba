@@ -114,6 +114,28 @@ abstract final class PlatformFileOutput {
     }
   }
 
+  /// Shares a PDF via [SharePlus] (e.g. pick WhatsApp). Does not open a save
+  /// dialog on desktop — use [saveViaDialog] when the user asked to save.
+  static Future<String> sharePdfFromTemp({
+    required String filename,
+    required Uint8List bytes,
+    String? text,
+  }) async {
+    final safeName = _ensureExtension(_basename(filename), 'pdf');
+    final directory = await getTemporaryDirectory();
+    final output = File('${directory.path}/$safeName');
+    await output.writeAsBytes(bytes, flush: true);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(output.path, mimeType: 'application/pdf')],
+        text: text,
+      ),
+    );
+
+    return output.path;
+  }
+
   /// Mobile: write to temp and open the native share sheet.
   ///
   /// Desktop sandboxes block sharing temp files, so we use the save dialog

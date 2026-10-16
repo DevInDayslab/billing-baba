@@ -45,7 +45,12 @@ abstract final class DashboardLayout {
   static const tabBarHeight = 40.0;
 
   // Fixed dashboard spacing.
+  /// In-card padding (unchanged when outer gutters change).
   static const double pagePadding = AppSpacing.lg;
+  /// Outer gutter between viewport edge and dashboard grid.
+  static const double pageGutterHorizontal = AppSpacing.sm;
+  static const double pageGutterTop = AppSpacing.sm;
+  static const double pageGutterBottom = AppSpacing.lg;
   static const double gridGap = AppSpacing.xs;
 
   // Card chrome.
@@ -80,10 +85,13 @@ abstract final class DashboardLayout {
         : 800.0;
 
     const padding = pagePadding;
+    const gutterH = pageGutterHorizontal;
+    const gutterTop = pageGutterTop;
+    const gutterBottom = pageGutterBottom;
     const gap = gridGap;
 
-    final contentWidth = width - padding * 2;
-    final contentHeight = height - padding * 2;
+    final contentWidth = width - gutterH * 2;
+    final contentHeight = height - gutterTop - gutterBottom;
 
     final sideWidth = contentWidth * sidePanelRatio;
     final mainWidth = contentWidth - sideWidth - gap;
@@ -140,8 +148,12 @@ final class DashboardMetrics {
   int get chartRowFlex => DashboardLayout.chartRowFlex;
   int get reportsRowFlex => DashboardLayout.reportsRowFlex;
 
-  EdgeInsets get pagePadding =>
-      const EdgeInsets.all(DashboardLayout.pagePadding);
+  EdgeInsets get pagePadding => const EdgeInsets.fromLTRB(
+    DashboardLayout.pageGutterHorizontal,
+    DashboardLayout.pageGutterTop,
+    DashboardLayout.pageGutterHorizontal,
+    DashboardLayout.pageGutterBottom,
+  );
   EdgeInsets get cardPadding =>
       const EdgeInsets.all(DashboardLayout.pagePadding);
   EdgeInsets get sideWidgetPadding => const EdgeInsets.symmetric(

@@ -99,7 +99,7 @@ class _PickerBody extends StatelessWidget {
       return SaleFilterDropdown(
         label: hint,
         options: const [
-          'No bank accounts — add one under Sale → Cash & Bank',
+          'No bank accounts — add one under Other Products → Accounts',
         ],
         selected: hint,
         onSelected: (_) {},

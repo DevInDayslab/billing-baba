@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/constants/storage_keys.dart';
+import 'package:billing_baba/core/platform/app_platform.dart';
+import 'package:billing_baba/core/platform/desktop_app_instance.dart';
 import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/network/api_error_parser.dart';
 import 'package:billing_baba/core/network/business_selection_retry_guard.dart';
@@ -554,13 +556,25 @@ class Auth extends _$Auth {
       }
 
       final nextStatus = _statusForSession(session);
-      _setAuthStatus(nextStatus);
       state = state.copyWith(
         session: session,
         phone: session.user.phone,
         otpPhase: OtpPhase.idle,
         backendLoginCompleted: true,
       );
+
+      // Second desktop window shares tokens/DB but should pick a company explicitly.
+      if (AppPlatform.current.isDesktop &&
+          !DesktopAppInstance.isPrimary &&
+          nextStatus == AuthStatus.authenticated) {
+        SwitchCompanyDebugLog.action(
+          'tryAutoLogin additional instance → enterBusinessSelection',
+        );
+        await enterBusinessSelection();
+        return;
+      }
+
+      _setAuthStatus(nextStatus);
       if (AuthService.isOfflineDevSession(session)) {
         // Bootstrap must not wipe a restored session — failures are best-effort.
         try {

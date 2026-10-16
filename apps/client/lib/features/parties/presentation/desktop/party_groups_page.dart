@@ -9,6 +9,7 @@ import 'package:billing_baba/features/parties/application/party_groups_provider.
 import 'package:billing_baba/features/parties/application/party_service.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_group_detail_panel.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_group_list_panel.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/parties_desktop_layout.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_settings_side_panel.dart';
 import 'package:billing_baba/features/sales/presentation/desktop/widgets/sale_field_decoration.dart';
@@ -118,6 +119,8 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
         }
 
         return InventorySplitLayout(
+          listFlex: partyListPanelFlex,
+          detailFlex: partyDetailPanelFlex,
           listPanel: const PartyGroupListPanel(),
           detailPanel: selectedGroup == null
               ? const InventoryDetailPlaceholder(
@@ -135,26 +138,26 @@ class _PartyGroupsPageState extends ConsumerState<DesktopPartyGroupsPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            0,
-            AppSpacing.md,
-            AppSpacing.md,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              PartyPageTitleBar(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: PartiesDesktopLayout.titleBarPadding,
+              child: PartyPageTitleBar(
                 currentRoute: AppRoutes.partyGroups,
                 onAddGroup: () => openDesktopAddGroupDialog(context, ref),
                 onSettingsTap: () => unawaited(
                   showPartySettingsSidePanel(context: context),
                 ),
               ),
-              Expanded(child: body),
-            ],
-          ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: PartiesDesktopLayout.workspacePadding,
+                child: body,
+              ),
+            ),
+          ],
         ),
       ),
     );

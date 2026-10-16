@@ -7,6 +7,7 @@ import 'package:billing_baba/features/dashboard/presentation/desktop/widgets/das
 import 'package:billing_baba/features/hidden_ledger/presentation/desktop/hidden_ledger_list_page.dart';
 import 'package:billing_baba/features/parties/application/parties_tab_provider.dart';
 import 'package:billing_baba/features/settings/application/party_settings_provider.dart';
+import 'package:billing_baba/features/parties/presentation/desktop/parties_desktop_layout.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/party_details_page.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/party_groups_page.dart';
 import 'package:billing_baba/features/parties/presentation/desktop/widgets/party_page_title_bar.dart';
@@ -184,17 +185,12 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
             ),
           ),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                0,
-                AppSpacing.md,
-                AppSpacing.md,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  PartyPageTitleBar(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: PartiesDesktopLayout.titleBarPadding,
+                  child: PartyPageTitleBar(
                     currentRoute: currentRoute,
                     onAddParty: () => openDesktopAddPartyDialog(context),
                     onAddGroup: () => openDesktopAddGroupDialog(context, ref),
@@ -202,7 +198,10 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
                       showPartySettingsSidePanel(context: context),
                     ),
                   ),
-                  Expanded(
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: PartiesDesktopLayout.workspacePadding,
                     child: TabBarView(
                       controller: controller,
                       children: [
@@ -219,8 +218,8 @@ class _DesktopPartiesPageState extends ConsumerState<DesktopPartiesPage>
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

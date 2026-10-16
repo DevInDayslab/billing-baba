@@ -6,6 +6,10 @@ import 'package:flutter/material.dart';
 const inventoryListPanelFlex = 573;
 const inventoryDetailPanelFlex = 1986;
 
+/// Parties list pane (same flex ratio as inventory list/detail split).
+const partyListPanelFlex = inventoryListPanelFlex;
+const partyDetailPanelFlex = inventoryDetailPanelFlex;
+
 class InventorySplitLayout extends StatelessWidget {
   const InventorySplitLayout({
     required this.listPanel,

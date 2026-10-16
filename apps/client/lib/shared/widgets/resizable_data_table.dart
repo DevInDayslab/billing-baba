@@ -50,6 +50,7 @@ class ResizableDataTable extends StatefulWidget {
     this.headerBackgroundColor = const Color(0xFFF5F7FA),
     this.rowBorderColor = _gridBorderColor,
     this.shrinkToFit = false,
+    this.expandToFill = true,
     super.key,
   });
 
@@ -61,6 +62,10 @@ class ResizableDataTable extends StatefulWidget {
   /// When true, proportionally narrows columns to fit the viewport instead of
   /// showing a horizontal scrollbar (until the user manually resizes a column).
   final bool shrinkToFit;
+
+  /// When true, grows columns to use extra viewport width. When false, columns
+  /// stay at their natural width (still shrink-to-fit when [shrinkToFit]).
+  final bool expandToFill;
 
   @override
   State<ResizableDataTable> createState() => _ResizableDataTableState();
@@ -223,7 +228,7 @@ class _ResizableDataTableState extends State<ResizableDataTable> {
       );
     }
 
-    if (naturalWidth >= availableWidth) {
+    if (naturalWidth >= availableWidth || !widget.expandToFill) {
       return List<double>.from(_columnWidths);
     }
 
@@ -313,7 +318,9 @@ class _ResizableDataTableState extends State<ResizableDataTable> {
           0,
           (sum, width) => sum + width,
         );
-        final childWidth = availableWidth.isFinite && !_hasManualResize
+        final childWidth = availableWidth.isFinite &&
+                !_hasManualResize &&
+                widget.expandToFill
             ? math.max(displayTableWidth, availableWidth)
             : displayTableWidth;
         final needsHorizontalScroll =

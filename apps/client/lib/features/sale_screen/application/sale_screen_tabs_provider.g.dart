@@ -20,7 +20,7 @@ final class SaleScreenTabsProvider
         argument: null,
         retry: null,
         name: r'saleScreenTabsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -41,7 +41,7 @@ final class SaleScreenTabsProvider
   }
 }
 
-String _$saleScreenTabsHash() => r'32ddf69d0209cf66efe6c86050031018a02758f1';
+String _$saleScreenTabsHash() => r'd3fc32cd44c1fee59a40e4554fcee541900fbb81';
 
 abstract class _$SaleScreenTabs extends $Notifier<SaleScreenTabsState> {
   SaleScreenTabsState build();
