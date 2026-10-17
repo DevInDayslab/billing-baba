@@ -1,5 +1,5 @@
-# Prints GitHub Actions variable/secret mapping from Railway API S3 env vars.
-# Usage (PowerShell): set S3_PUBLIC_BASE_URL, S3_ENDPOINT, S3_BUCKET, then run this script.
+# Prints GitHub Actions variable/secret mapping for desktop auto-update hosting.
+# Usage: set S3_PUBLIC_BASE_URL (= PUBLIC_BASE), S3_ENDPOINT, S3_BUCKET for the *public update* bucket, then run.
 param(
   [string]$Prefix = "updates/windows"
 )
@@ -19,7 +19,7 @@ Write-Host "UPDATE_MANIFEST_URL=$publicBase/$prefix/version.json"
 Write-Host "UPDATE_DOWNLOAD_BASE_URL=$publicBase/$prefix"
 Write-Host "UPDATE_S3_PATH_PREFIX=$prefix"
 Write-Host ""
-Write-Host "=== GitHub Actions SECRETS (same values as Railway API) ===" -ForegroundColor Cyan
+Write-Host "=== GitHub Actions SECRETS (public update bucket — not API private bucket unless shared) ===" -ForegroundColor Cyan
 Write-Host "UPDATE_S3_BUCKET          <- S3_BUCKET"
 Write-Host "UPDATE_S3_ACCESS_KEY_ID   <- S3_ACCESS_KEY_ID"
 Write-Host "UPDATE_S3_SECRET_ACCESS_KEY <- S3_SECRET_ACCESS_KEY"
