@@ -40,6 +40,10 @@ MSG91_WIDGET_AUTH_TOKEN=${MSG91_WIDGET_AUTH_TOKEN}
 USE_FAKE_COLLABORATION=false
 EOF
 
+if [[ -n "${UPDATE_MANIFEST_URL:-}" ]]; then
+  printf 'UPDATE_MANIFEST_URL=%s\n' "${UPDATE_MANIFEST_URL}" >> "${ENV_FILE}"
+fi
+
 require_key() {
   if ! grep -q "^${1}=." "${ENV_FILE}"; then
     echo "::error::Missing or empty required key in .env: ${1}"

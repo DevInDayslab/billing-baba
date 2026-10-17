@@ -52,9 +52,12 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=admin
+CloseApplications=yes
+RestartApplications=no
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-; Future: SignTool=signtool /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a $f
+; Enable when an Authenticode certificate is available:
+; SignTool=signtool /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 /a $f
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -74,7 +77,8 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: deskto
 
 [Run]
 Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Microsoft Visual C++ Redistributable..."; Flags: waituntilterminated; Check: VCRedistNeedsInstall
-Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent; Tasks: launchapp
+Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent runasoriginaluser; Tasks: launchapp
+Filename: "{app}\{#AppExeName}"; Flags: nowait skipifsilent runasoriginaluser; Check: WizardSilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

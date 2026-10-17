@@ -7,6 +7,7 @@ import Credits from '../../assets/landing/credit.svg?react';
 import Purchase from '../../assets/landing/purchase_order.svg?react';
 import Sales from '../../assets/landing/sales.svg?react';
 import Time from '../../assets/landing/time.svg?react';
+import { DownloadButton } from '../../components/marketing/DownloadButton';
 import { DOWNLOAD_URL } from '../../services/deep-link';
 import '../../styles/marketing/base.scss';
 import '../../styles/marketing/landing.scss';
@@ -727,9 +728,7 @@ export function LandingPage() {
           <a href={DOWNLOAD_URL}>
             <img src="/assets/landing/get_it_on_google_play.png" alt="Get it on Google Play" />
           </a>
-          <Link to="/download">
-            <button type="button">Sign Up for free</button>
-          </Link>
+          <DownloadButton compact />
         </div>
       </section>
       <section className="five">

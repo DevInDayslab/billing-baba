@@ -1,0 +1,4 @@
+enum InstallLaunchResult {
+  started,
+  userCancelledOrFailed,
+}

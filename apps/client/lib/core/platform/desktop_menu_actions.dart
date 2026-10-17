@@ -7,6 +7,9 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/routing/app_routes.dart';
 import 'package:billing_baba/core/sync/network/sync_api.dart';
+import 'package:billing_baba/features/app_update/application/update_controller.dart';
+import 'package:billing_baba/features/app_update/application/update_state.dart';
+import 'package:billing_baba/features/app_update/presentation/update_dialog.dart';
 import 'package:billing_baba/features/auth/application/auth_provider.dart';
 import 'package:billing_baba/features/business/utils/switch_company_debug_log.dart';
 import 'package:billing_baba/features/settings/models/settings_tab.dart';
@@ -80,6 +83,15 @@ abstract final class DesktopMenuActions {
 
   static void openAbout(WidgetRef ref) {
     go(ref, AppRoutes.settingsTab(SettingsTab.about.id));
+  }
+
+  static Future<void> checkForUpdates(WidgetRef ref) async {
+    if (!AppConfig.updateManifestConfigured) return;
+    await ref.read(updateControllerProvider.notifier).checkManually();
+    final state = ref.read(updateControllerProvider);
+    if (state.status == UpdateStatus.updateAvailable) {
+      showUpdateDialog(isForced: state.isForced);
+    }
   }
 
   static Future<void> logout(WidgetRef ref) async {

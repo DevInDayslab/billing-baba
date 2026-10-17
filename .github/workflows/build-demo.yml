@@ -15,13 +15,23 @@
 #
 # Future placeholders (not implemented):
 #   - Windows Authenticode signing (SignTool / certificate)
-#   - Auto-updater (e.g. winsparkle, custom delta updates)
 #   - MSIX packaging for Microsoft Store distribution
+#
+# Auto-update: public manifest + installer via publish-update.ps1 on v* tags only.
 
 name: Build Demo
 
 on:
   workflow_dispatch:
+    inputs:
+      force_update:
+        description: "Set force_update in version.json (tag releases only)"
+        type: boolean
+        default: false
+      min_supported_build:
+        description: "min_supported_build in version.json"
+        type: number
+        default: 1
   push:
     branches:
       - demo
@@ -86,6 +96,7 @@ jobs:
           DEV_OTP: ${{ vars.DEV_OTP }}
           API_BASE_URL: ${{ vars.API_BASE_URL }}
           WEBSITE_URL: https://billingbaba.com
+          UPDATE_MANIFEST_URL: ${{ startsWith(github.ref, 'refs/tags/v') && vars.UPDATE_MANIFEST_URL || '' }}
           MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
           MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
         run: bash .github/scripts/setup-flutter-env.sh
@@ -107,11 +118,20 @@ jobs:
           flutter pub get
 
       - name: Build Windows release
-        run: >
-          flutter build windows --release
-          --dart-define=API_BASE_URL=$env:API_BASE_URL
-          --dart-define=WEBSITE_URL=https://billingbaba.com
-          --dart-define=GIT_COMMIT=${{ github.sha }}
+        shell: pwsh
+        run: |
+          $defines = @(
+            "--dart-define=API_BASE_URL=$env:API_BASE_URL",
+            "--dart-define=WEBSITE_URL=https://billingbaba.com",
+            "--dart-define=GIT_COMMIT=${{ github.sha }}"
+          )
+          if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
+            $manifestUrl = "${{ vars.UPDATE_MANIFEST_URL }}"
+            if ($manifestUrl) {
+              $defines += "--dart-define=UPDATE_MANIFEST_URL=$manifestUrl"
+            }
+          }
+          flutter build windows --release @defines
 
       # ── Verify build output ───────────────────────────────────────────────────
 
@@ -257,6 +277,81 @@ jobs:
 
           Write-Host "Generated checksums:"
           Get-Content $checksumFile | ForEach-Object { Write-Host $_ }
+
+      - name: Generate update manifest
+        shell: pwsh
+        working-directory: .
+        env:
+          UPDATE_DOWNLOAD_BASE_URL: ${{ vars.UPDATE_DOWNLOAD_BASE_URL }}
+          FORCE_UPDATE: ${{ github.event.inputs.force_update == true && 'true' || 'false' }}
+          MIN_SUPPORTED_BUILD: ${{ github.event.inputs.min_supported_build || 1 }}
+        run: |
+          if (-not $env:UPDATE_DOWNLOAD_BASE_URL) {
+            Write-Host "UPDATE_DOWNLOAD_BASE_URL not set — skipping version.json"
+            exit 0
+          }
+          .\.github\scripts\generate-update-manifest.ps1
+
+      - name: Publish update to public hosting
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        working-directory: .
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          UPDATE_MANIFEST_URL: ${{ vars.UPDATE_MANIFEST_URL }}
+          UPDATE_S3_BUCKET: ${{ secrets.UPDATE_S3_BUCKET }}
+          UPDATE_S3_ACCESS_KEY_ID: ${{ secrets.UPDATE_S3_ACCESS_KEY_ID }}
+          UPDATE_S3_SECRET_ACCESS_KEY: ${{ secrets.UPDATE_S3_SECRET_ACCESS_KEY }}
+          UPDATE_S3_ENDPOINT: ${{ secrets.UPDATE_S3_ENDPOINT }}
+          UPDATE_S3_PATH_PREFIX: ${{ vars.UPDATE_S3_PATH_PREFIX }}
+          UPDATE_DOWNLOAD_BASE_URL: ${{ vars.UPDATE_DOWNLOAD_BASE_URL }}
+        run: |
+          if (-not $env:UPDATE_DOWNLOAD_BASE_URL) {
+            Write-Error "UPDATE_DOWNLOAD_BASE_URL is required for tag releases"
+          }
+          if (-not $env:UPDATE_MANIFEST_URL) {
+            Write-Error "UPDATE_MANIFEST_URL is required for tag releases"
+          }
+          if (-not (Test-Path dist/version.json)) {
+            .\.github\scripts\generate-update-manifest.ps1
+          }
+          .\.github\scripts\publish-update.ps1
+
+      - name: Trigger website redeploy
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          WEBSITE_DEPLOY_HOOK_URL: ${{ secrets.WEBSITE_DEPLOY_HOOK_URL }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WEBSITE_DEPLOY_HOOK_URL)) {
+            Write-Host "WEBSITE_DEPLOY_HOOK_URL not set — skipping website redeploy hook"
+            exit 0
+          }
+          try {
+            Write-Host "Calling website deploy hook (no URL logged)"
+            Invoke-WebRequest -Method POST -Uri $env:WEBSITE_DEPLOY_HOOK_URL -UseBasicParsing | Out-Null
+            Write-Host "Website deploy hook invoked."
+          } catch {
+            $msg = $_.Exception.Message
+            if ($msg.Length -gt 200) { $msg = $msg.Substring(0, 200) }
+            Write-Warning "::warning::Website deploy hook skipped: $msg"
+          }
+
+      - name: Prune old update installers
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        working-directory: .
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
+          UPDATE_MANIFEST_URL: ${{ vars.UPDATE_MANIFEST_URL }}
+          UPDATE_S3_BUCKET: ${{ secrets.UPDATE_S3_BUCKET }}
+          UPDATE_S3_ACCESS_KEY_ID: ${{ secrets.UPDATE_S3_ACCESS_KEY_ID }}
+          UPDATE_S3_SECRET_ACCESS_KEY: ${{ secrets.UPDATE_S3_SECRET_ACCESS_KEY }}
+          UPDATE_S3_ENDPOINT: ${{ secrets.UPDATE_S3_ENDPOINT }}
+          UPDATE_S3_PATH_PREFIX: ${{ vars.UPDATE_S3_PATH_PREFIX }}
+          UPDATE_DOWNLOAD_BASE_URL: ${{ vars.UPDATE_DOWNLOAD_BASE_URL }}
+        run: |
+          .\.github\scripts\publish-update.ps1 -PruneOnly
 
       # ── GitHub Release (tag v* only) ──────────────────────────────────────────
 
