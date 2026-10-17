@@ -3,14 +3,19 @@ import 'dart:io';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/features/app_update/domain/install_launch_result.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
-/// Builds the PowerShell command used to launch the installer elevated on Windows.
-String buildWindowsInstallerLaunchCommand(String installerPath) {
-  final path = installerPath.replaceAll("'", "''");
-  return "Start-Process -FilePath '$path' "
-      "-ArgumentList '/SILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' "
-      '-Verb RunAs';
+/// PowerShell script: wait for the app to exit, then run the installer elevated.
+String buildWindowsUpdateApplyScript(String installerPath) {
+  final escaped = installerPath.replaceAll("'", "''");
+  return r"$ErrorActionPreference = 'Stop'" '\n'
+      r"while (Get-Process -Name billing_baba -ErrorAction SilentlyContinue) {" '\n'
+      r"  Start-Sleep -Milliseconds 500" '\n'
+      r"}" '\n'
+      "Start-Process -FilePath '$escaped' "
+      r"-ArgumentList '/SILENT','/SUPPRESSMSGBOXES','/NORESTART','/CLOSEAPPLICATIONS' "
+      r"-Verb RunAs -Wait";
 }
 
 typedef WindowsInstallerProcessRunner =
@@ -20,35 +25,46 @@ typedef WindowsInstallerProcessRunner =
       bool runInShell,
     });
 
-Future<int> _defaultWindowsProcessRunner(
-  String executable,
-  List<String> arguments, {
-  bool runInShell = false,
-}) async {
-  final process = await Process.start(
-    executable,
-    arguments,
-    runInShell: runInShell,
-  );
-  return process.exitCode;
-}
-
 Future<InstallLaunchResult> launchUpdateInstaller(
   File installerFile, {
   WindowsInstallerProcessRunner? windowsProcessRunner,
 }) async {
   if (!kIsWeb && Platform.isWindows) {
-    final runner = windowsProcessRunner ?? _defaultWindowsProcessRunner;
-    final command = buildWindowsInstallerLaunchCommand(installerFile.path);
-    final exitCode = await runner(
-      'powershell',
-      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', command],
-      runInShell: true,
+    final scriptPath = p.join(
+      Directory.systemTemp.path,
+      'billing_baba_apply_update.ps1',
     );
-    if (exitCode == 0) {
-      return InstallLaunchResult.started;
+    await File(scriptPath).writeAsString(
+      buildWindowsUpdateApplyScript(installerFile.path),
+    );
+
+    final args = <String>[
+      '-NoProfile',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-WindowStyle',
+      'Hidden',
+      '-File',
+      scriptPath,
+    ];
+
+    if (windowsProcessRunner != null) {
+      final exitCode = await windowsProcessRunner(
+        'powershell.exe',
+        args,
+        runInShell: false,
+      );
+      return exitCode == 0
+          ? InstallLaunchResult.started
+          : InstallLaunchResult.userCancelledOrFailed;
     }
-    return InstallLaunchResult.userCancelledOrFailed;
+
+    await Process.start(
+      'powershell.exe',
+      args,
+      mode: ProcessStartMode.detached,
+    );
+    return InstallLaunchResult.started;
   }
 
   final uri = Uri.parse(AppConfig.websiteUrl);

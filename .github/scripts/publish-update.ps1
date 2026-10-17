@@ -248,6 +248,13 @@ $endpoint = [Environment]::GetEnvironmentVariable("UPDATE_S3_ENDPOINT")
 $env:AWS_ACCESS_KEY_ID = $accessKey
 $env:AWS_SECRET_ACCESS_KEY = $secretKey
 $env:AWS_DEFAULT_REGION = "auto"
+# Railway and most S3-compatible stores use path-style addressing (matches API S3_FORCE_PATH_STYLE).
+$forcePathStyle = [Environment]::GetEnvironmentVariable("UPDATE_S3_FORCE_PATH_STYLE")
+if ($forcePathStyle -eq 'false' -or $forcePathStyle -eq 'False') {
+  $env:AWS_S3_ADDRESSING_STYLE = "virtual"
+} else {
+  $env:AWS_S3_ADDRESSING_STYLE = "path"
+}
 
 if ($PruneOnly) {
   Invoke-InstallerPrune `
