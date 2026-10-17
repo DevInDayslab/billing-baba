@@ -9,7 +9,7 @@ Billing Baba desktop (Windows) checks a **public** `version.json` manifest hoste
    version: 1.1.0+2
    ```
    The updater compares **build numbers** (`+2`). Every release must increment the build.
-2. Commit and push tag `v1.1.0` (semver only in tag name).
+2. Commit and push tag `v1.1.0` (semver only in tag name), **or** merge a `pubspec.yaml` bump to `develop`/`main` to auto-tag (see [auto-update-railway.md](auto-update-railway.md)).
 3. The [`build-demo`](../../.github/workflows/build-demo.yml) workflow on `v*` tags:
    - Builds `dist/BillingBabaSetup-v1.1.0.exe`
    - Writes `dist/version.json` (when `UPDATE_DOWNLOAD_BASE_URL` is set)
