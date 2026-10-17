@@ -5,6 +5,17 @@ import 'package:billing_baba/features/app_update/domain/install_launch_result.da
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('windowsUpdateHelperCmdStartArgs', () {
+    test('breaks away via cmd start before powershell', () {
+      final args = windowsUpdateHelperCmdStartArgs(
+        windowsUpdateHelperPowerShellArgs(r'C:\tmp\apply.ps1'),
+      );
+      expect(args.take(5), ['/c', 'start', '/min', '', 'powershell.exe']);
+      expect(args, contains('-File'));
+      expect(args.last, r'C:\tmp\apply.ps1');
+    });
+  });
+
   group('buildWindowsUpdateApplyScript', () {
     test('escapes apostrophes and waits for app exit before silent install', () {
       const path = r"C:\Apps\Billing Baba's\setup.exe";
