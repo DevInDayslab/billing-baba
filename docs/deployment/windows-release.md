@@ -37,6 +37,8 @@ Workflow file: [`.github/workflows/build-demo.yml`](../../.github/workflows/buil
 9. **GitHub Release** — upload installer, ZIP, and checksums
 10. **Artifacts** — upload the same files for workflow downloads
 
+On **`v*` tags only**, the workflow also generates `version.json`, publishes to public object storage ([auto-update-railway.md](auto-update-railway.md)), and may trigger a Vercel deploy hook for `/download`.
+
 ### Fail-fast checks
 
 The workflow exits with an error if any of these are missing after their step:

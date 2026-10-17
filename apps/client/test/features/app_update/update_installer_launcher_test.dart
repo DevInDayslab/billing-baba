@@ -5,16 +5,18 @@ import 'package:billing_baba/features/app_update/domain/install_launch_result.da
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('buildWindowsInstallerLaunchCommand', () {
-    test('escapes apostrophes and includes silent flags and RunAs', () {
+  group('buildWindowsUpdateApplyScript', () {
+    test('escapes apostrophes and waits for app exit before silent install', () {
       const path = r"C:\Apps\Billing Baba's\setup.exe";
-      final command = buildWindowsInstallerLaunchCommand(path);
-      expect(command, contains("Billing Baba''s"));
-      expect(command, contains('/SILENT'));
-      expect(command, contains('/SUPPRESSMSGBOXES'));
-      expect(command, contains('/NORESTART'));
-      expect(command, contains('/CLOSEAPPLICATIONS'));
-      expect(command, contains('-Verb RunAs'));
+      final script = buildWindowsUpdateApplyScript(path);
+      expect(script, contains("Billing Baba''s"));
+      expect(script, contains('billing_baba'));
+      expect(script, contains('/SILENT'));
+      expect(script, contains('/SUPPRESSMSGBOXES'));
+      expect(script, contains('/NORESTART'));
+      expect(script, contains('/CLOSEAPPLICATIONS'));
+      expect(script, contains('-Wait'));
+      expect(script, contains('-Verb RunAs'));
     });
   });
 
@@ -24,19 +26,23 @@ void main() {
       final file = File('${dir.path}/setup.exe');
       await file.writeAsBytes(const [1, 2, 3]);
 
-      String? capturedCommand;
+      List<String>? capturedArgs;
       final result = await launchUpdateInstaller(
         file,
         windowsProcessRunner: (executable, arguments, {runInShell = false}) async {
-          expect(executable, 'powershell');
-          expect(runInShell, isTrue);
-          capturedCommand = arguments.last;
+          expect(executable, 'powershell.exe');
+          expect(runInShell, isFalse);
+          capturedArgs = arguments;
           return 0;
         },
       );
 
       expect(result, InstallLaunchResult.started);
-      expect(capturedCommand, contains('/SILENT'));
+      expect(capturedArgs, isNotNull);
+      expect(capturedArgs!.join(' '), contains('-File'));
+      final scriptPath = capturedArgs!.last;
+      final script = await File(scriptPath).readAsString();
+      expect(script, contains('/SILENT'));
       await dir.delete(recursive: true);
     });
 

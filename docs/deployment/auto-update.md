@@ -35,9 +35,13 @@ Forced updates still **block** when a POS tab has items or payments in progress.
 
 Workflow dispatch inputs `force_update` and `min_supported_build` apply when generating `version.json` on manual workflow runs.
 
-## Hosting setup (one-time) — Option A (recommended)
+## Hosting setup (one-time)
 
-The marketing site (`apps/website`) is a **static Vite SPA on Vercel** at `https://billingbaba.com`. Windows installers and `version.json` live on a **separate update host** (subdomain + object storage), not on the main website origin.
+The marketing site (`apps/website`) is a **static Vite SPA on Vercel** at `https://billingbaba.com`. Installers and `version.json` are served over **HTTPS** from object storage (not from the main site origin).
+
+**Billing Baba production (Railway, same bucket as API):** follow [auto-update-railway.md](auto-update-railway.md) — prefix `updates/windows/`, public URLs from API `S3_PUBLIC_BASE_URL`, GitHub `UPDATE_S3_*` = Railway `S3_*`.
+
+**Alternative (dedicated CDN bucket, e.g. Cloudflare R2):**
 
 1. Create an S3-compatible bucket (AWS S3, Cloudflare R2, etc.).
 2. Enable **public read** only for the update prefix (e.g. `updates/windows/*`), not the whole bucket.
@@ -72,6 +76,7 @@ CI fails if manifest and download-base hosts differ (`generate-update-manifest.p
    - `UPDATE_MANIFEST_URL=http://127.0.0.1:8080/version.json`
 2. Lower the build number in `pubspec.yaml` temporarily so the manifest appears newer.
 3. Exercise: optional vs forced update, UAC decline, checksum mismatch (wrong `sha256`), blocked update with items in a POS tab, soft block with pending sync + “Install anyway”.
+4. **Update now** runs Inno silently after the app exits (elevated helper waits for `billing_baba` to close). Rebuild installers with `scripts/update_test/build-test-installers.ps1` after changing `BillingBaba.iss` or launcher behavior. That script runs `flutter clean` once and verifies each `billing_baba.exe` version before Inno packages it (avoids mislabeled `BillingBabaSetup-v1.0.0.exe` containing a newer build).
 
 ## Data safety
 

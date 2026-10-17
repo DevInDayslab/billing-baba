@@ -23,16 +23,41 @@ function Set-PubspecVersion([string]$versionLine) {
 }
 
 function Build-One([string]$VersionPlus, [string]$AppVersion, [string]$OutName) {
+  if ($VersionPlus -notmatch '^(.+)\+(\d+)$') {
+    Write-Error "VersionPlus must be semver+build (e.g. 1.0.0+1), got: $VersionPlus"
+  }
+  $buildName = $Matches[1]
+  $buildNumber = $Matches[2]
+  $expectedFileVersion = "$buildName+$buildNumber"
+
   Set-PubspecVersion $VersionPlus
   Push-Location $client
   try {
+    # Incremental Windows builds can keep the previous exe's version resources when
+    # only pubspec changes — always pass explicit build name/number for test kits.
     flutter build windows --release `
+      --build-name=$buildName `
+      --build-number=$buildNumber `
       --dart-define=UPDATE_MANIFEST_URL=$ManifestUrlHttps `
       --dart-define=UPDATE_MANIFEST_ALLOW_HTTP=true
   } finally {
     Pop-Location
   }
   $releaseDir = Join-Path $client "build\windows\x64\runner\Release"
+  $builtExe = Join-Path $releaseDir "billing_baba.exe"
+  if (-not (Test-Path $builtExe)) {
+    Write-Error "Missing built exe: $builtExe"
+  }
+  $actualFileVersion = (Get-Item $builtExe).VersionInfo.FileVersion
+  if ($actualFileVersion -ne $expectedFileVersion) {
+    Write-Error @"
+billing_baba.exe version mismatch before packaging $OutName.
+  Expected: $expectedFileVersion
+  Actual:   $actualFileVersion
+Run 'flutter clean' in apps/client and rebuild this script.
+"@
+  }
+  Write-Host "Verified $builtExe => $actualFileVersion"
   if (-not (Get-Command $IsccPath -ErrorAction SilentlyContinue)) {
     Write-Error "Inno Setup compiler not found ($IsccPath)"
   }
@@ -41,11 +66,20 @@ function Build-One([string]$VersionPlus, [string]$AppVersion, [string]$OutName) 
   if (-not (Test-Path $built)) {
     Write-Error "Expected installer at $built"
   }
-  Copy-Item -Force $built (Join-Path $OutDir $OutName)
+  if ($OutName -ne "BillingBabaSetup-v$AppVersion.exe") {
+    Copy-Item -Force $built (Join-Path $OutDir $OutName)
+  }
 }
 
 try {
   New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+  Push-Location $client
+  try {
+    Write-Host "Cleaning Windows build output so each installer gets the correct version..."
+    flutter clean
+  } finally {
+    Pop-Location
+  }
   Build-One "1.0.0+1" "1.0.0" "BillingBabaSetup-v1.0.0.exe"
   Build-One "1.0.1+2" "1.0.1" "BillingBabaSetup-v1.0.1.exe"
 } finally {

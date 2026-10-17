@@ -40,15 +40,6 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
     final isForced = state.isForced;
     final info = state.updateInfo;
 
-    ref.listen(updateControllerProvider, (previous, next) {
-      if (next.status == UpdateStatus.idle &&
-          previous?.status != UpdateStatus.installing) {
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      }
-    });
-
     return PopScope(
       canPop: !isForced,
       child: AlertDialog(
@@ -239,8 +230,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
           if (!state.isForced)
             TextButton(
               onPressed: () {
-                controller.dismissOptional();
                 Navigator.of(context).pop();
+                controller.dismissOptional();
               },
               child: const Text('Later'),
             ),
@@ -260,8 +251,8 @@ class _UpdateDialogState extends ConsumerState<UpdateDialog> {
             onPressed: busy
                 ? null
                 : () {
-                    controller.dismissOptional();
                     Navigator.of(context).pop();
+                    controller.dismissOptional();
                   },
             child: const Text('Later'),
           ),

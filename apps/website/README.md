@@ -25,7 +25,7 @@ Runs on http://localhost:5173 and proxies `/api` to the API on port 3000.
 Copy `.env.example` to `.env`:
 
 - `VITE_API_BASE_URL` — API base URL (default `http://localhost:3000`)
-- `WEBSITE_UPDATE_MANIFEST_URL` — public HTTPS `version.json` (build-time only; same host as installer CDN). Used by `prebuild` to embed release data for `/download`.
+- `WEBSITE_UPDATE_MANIFEST_URL` — public HTTPS `version.json` (build-time only; same URL as GitHub `UPDATE_MANIFEST_URL`). Railway: `{S3_PUBLIC_BASE_URL}/updates/windows/version.json`. See [auto-update-railway.md](../../docs/deployment/auto-update-railway.md).
 
 ## Routes
 
