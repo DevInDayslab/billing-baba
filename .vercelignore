@@ -1,7 +1,8 @@
-apps/client
-apps/api
-docs
-coverage
-scripts
-.cursor
-.github
+/apps/client
+/apps/api
+/docs
+/coverage
+/scripts
+!apps/website/scripts/**
+/.cursor
+/.github
