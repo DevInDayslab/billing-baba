@@ -39,7 +39,7 @@ Workflow dispatch inputs `force_update` and `min_supported_build` apply when gen
 
 The marketing site (`apps/website`) is a **static Vite SPA on Vercel** at `https://billingbaba.com`. Installers and `version.json` are served over **HTTPS** from object storage (not from the main site origin).
 
-**Billing Baba production (Railway, same bucket as API):** follow [auto-update-railway.md](auto-update-railway.md) — prefix `updates/windows/`, public URLs from API `S3_PUBLIC_BASE_URL`, GitHub `UPDATE_S3_*` = Railway `S3_*`.
+**Billing Baba production (Railway):** follow [auto-update-railway.md](auto-update-railway.md). Updates go in a **public** bucket (`public files` / presigner); GitHub `UPDATE_S3_*` uses that bucket’s credentials. Migrating off a private API bucket: [auto-update-public-bucket-cutover.md](auto-update-public-bucket-cutover.md).
 
 **Alternative (dedicated CDN bucket, e.g. Cloudflare R2):**
 

@@ -1,6 +1,8 @@
-# GitHub + Vercel update config checklist (Railway, same bucket)
+# GitHub + Vercel update config checklist (Railway public update bucket)
 
-Copy values from **Railway API variables**. Do not commit real secrets to git.
+Copy upload credentials from Railway **public files** (or your dedicated update bucket). Use **`PUBLIC_BASE`** for URLs (bucket public host or `s3-public-presigner`). Do not commit real secrets to git.
+
+Full cutover: [auto-update-public-bucket-cutover.md](auto-update-public-bucket-cutover.md).
 
 ## Derive `PUBLIC_BASE`
 
