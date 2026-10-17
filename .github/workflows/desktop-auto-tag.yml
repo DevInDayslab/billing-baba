@@ -1,0 +1,61 @@
+# When apps/client/pubspec.yaml changes on develop/main, move tag v{semver} to this
+# commit and push. That triggers build-demo.yml (v* tag) which builds, publishes
+# to Railway, and updates version.json.
+#
+# Semver comes from pubspec (part before +). Build number (+N) is in the manifest only.
+# Re-bumping 1.0.0+1 → 1.0.0+2 reuses tag v1.0.0 (force-updated) and republishes.
+
+name: Desktop auto-tag release
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - apps/client/pubspec.yaml
+
+permissions:
+  contents: write
+
+jobs:
+  tag-release:
+    name: Tag v{semver} from pubspec
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Read semver from pubspec.yaml
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          line=$(grep -E '^version:' apps/client/pubspec.yaml | head -1)
+          if [ -z "$line" ]; then
+            echo "No version line in pubspec.yaml" >&2
+            exit 1
+          fi
+          raw="${line#version:}"
+          raw="${raw// /}"
+          semver="${raw%%+*}"
+          if [ -z "$semver" ]; then
+            echo "Could not parse semver from: $line" >&2
+            exit 1
+          fi
+          echo "semver=$semver" >> "$GITHUB_OUTPUT"
+          echo "Parsed semver: $semver (full: $raw)"
+
+      - name: Create or update tag and push
+        env:
+          SEMVER: ${{ steps.version.outputs.semver }}
+        run: |
+          set -euo pipefail
+          TAG="v${SEMVER}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f "$TAG"
+          git push origin "$TAG" --force
+          echo "Pushed $TAG — Build Demo workflow should start for the tag."

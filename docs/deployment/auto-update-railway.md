@@ -85,14 +85,26 @@ Redeploy production after setting the variable. Add deploy hook URL to GitHub as
 
 ## Ship a release
 
-1. Bump `apps/client/pubspec.yaml` (`version: X.Y.Z+N` — increment **N** every release).
-2. Optional: `docs/release-notes/X.Y.Z.md`.
-3. Commit and push `develop`.
-4. Tag and push: `git tag vX.Y.Z` then `git push origin vX.Y.Z`.
-5. Watch **Build Demo** on the tag; confirm **Publish update to public hosting** succeeds.
-6. Verify manifest URL in a browser; check `https://billingbaba.com/download`.
+### Automated (develop / main)
 
-Tag builds bake `UPDATE_MANIFEST_URL` into the desktop app. Branch builds do not.
+When **`apps/client/pubspec.yaml`** changes on **`develop`** or **`main`**:
+
+1. Workflow [`.github/workflows/desktop-auto-tag.yml`](../../.github/workflows/desktop-auto-tag.yml) creates or **moves** tag **`vX.Y.Z`** (semver from pubspec, before `+`) to that commit.
+2. Tag push runs **Build Demo**: build installer, publish to Railway, update `version.json`, GitHub Release, optional Vercel hook.
+
+**You:** bump `version: X.Y.Z+N` (increment **N** every release), optional `docs/release-notes/X.Y.Z.md`, merge to `develop` (or `main`). No manual `git tag` unless you prefer it.
+
+**Same semver, new build** (e.g. `1.0.0+1` → `1.0.0+2`): tag stays `v1.0.0` (force-updated); manifest `latest_build` comes from `+N` in pubspec.
+
+### Manual (optional)
+
+`git tag vX.Y.Z` && `git push origin vX.Y.Z` still works.
+
+### Verify
+
+Watch **Build Demo** on the tag; confirm **Publish update to public hosting** succeeds. Check manifest URL and `https://billingbaba.com/download`.
+
+`UPDATE_MANIFEST_URL` is baked on **tag**, **develop**, and **main** builds (not `demo` branch).
 
 ## Rollback
 

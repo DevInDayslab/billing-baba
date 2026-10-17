@@ -6,8 +6,9 @@
 #   SHA256SUMS.txt                     — checksums for the above
 #
 # Triggers:
-#   Branch push (demo, develop)  → build + GitHub Artifacts
-#   Tag push v*                  → build + GitHub Release + GitHub Artifacts
+#   Branch push (demo, develop, main)  → build + GitHub Artifacts
+#   Tag push v*                      → build + publish update + GitHub Release
+#   desktop-auto-tag.yml on develop/main pubspec change → force-pushes v* tag → publish
 #   workflow_dispatch            → build + GitHub Artifacts (Release only when run on a v* tag)
 #
 # Re-pushing the same tag updates the existing release; assets with matching names are
@@ -36,6 +37,7 @@ on:
     branches:
       - demo
       - develop
+      - main
     tags:
       - "v*"
 
@@ -96,7 +98,7 @@ jobs:
           DEV_OTP: ${{ vars.DEV_OTP }}
           API_BASE_URL: ${{ vars.API_BASE_URL }}
           WEBSITE_URL: https://billingbaba.com
-          UPDATE_MANIFEST_URL: ${{ startsWith(github.ref, 'refs/tags/v') && vars.UPDATE_MANIFEST_URL || '' }}
+          UPDATE_MANIFEST_URL: ${{ (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && vars.UPDATE_MANIFEST_URL || '' }}
           MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
           MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
         run: bash .github/scripts/setup-flutter-env.sh
@@ -125,7 +127,9 @@ jobs:
             "--dart-define=WEBSITE_URL=https://billingbaba.com",
             "--dart-define=GIT_COMMIT=${{ github.sha }}"
           )
-          if ("${{ github.ref }}".StartsWith("refs/tags/v")) {
+          $ref = "${{ github.ref }}"
+          $bakeManifest = $ref.StartsWith("refs/tags/v") -or $ref -eq "refs/heads/develop" -or $ref -eq "refs/heads/main"
+          if ($bakeManifest) {
             $manifestUrl = "${{ vars.UPDATE_MANIFEST_URL }}"
             if ($manifestUrl) {
               $defines += "--dart-define=UPDATE_MANIFEST_URL=$manifestUrl"
