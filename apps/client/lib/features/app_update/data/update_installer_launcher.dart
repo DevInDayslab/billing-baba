@@ -25,6 +25,28 @@ typedef WindowsInstallerProcessRunner =
       bool runInShell,
     });
 
+/// PowerShell args for the post-exit elevated installer helper.
+List<String> windowsUpdateHelperPowerShellArgs(String scriptPath) => [
+  '-NoProfile',
+  '-ExecutionPolicy',
+  'Bypass',
+  '-WindowStyle',
+  'Hidden',
+  '-File',
+  scriptPath,
+];
+
+/// Spawns the helper via `cmd start` so it is not tied to the app's Windows job
+/// object (a detached child of `billing_baba.exe` is killed on `exit(0)`).
+List<String> windowsUpdateHelperCmdStartArgs(List<String> powerShellArgs) => [
+  '/c',
+  'start',
+  '/min',
+  '',
+  'powershell.exe',
+  ...powerShellArgs,
+];
+
 Future<InstallLaunchResult> launchUpdateInstaller(
   File installerFile, {
   WindowsInstallerProcessRunner? windowsProcessRunner,
@@ -38,20 +60,12 @@ Future<InstallLaunchResult> launchUpdateInstaller(
       buildWindowsUpdateApplyScript(installerFile.path),
     );
 
-    final args = <String>[
-      '-NoProfile',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-WindowStyle',
-      'Hidden',
-      '-File',
-      scriptPath,
-    ];
+    final psArgs = windowsUpdateHelperPowerShellArgs(scriptPath);
 
     if (windowsProcessRunner != null) {
       final exitCode = await windowsProcessRunner(
         'powershell.exe',
-        args,
+        psArgs,
         runInShell: false,
       );
       return exitCode == 0
@@ -60,8 +74,8 @@ Future<InstallLaunchResult> launchUpdateInstaller(
     }
 
     await Process.start(
-      'powershell.exe',
-      args,
+      'cmd.exe',
+      windowsUpdateHelperCmdStartArgs(psArgs),
       mode: ProcessStartMode.detached,
     );
     return InstallLaunchResult.started;
