@@ -6,6 +6,7 @@ import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/features/app_update/data/update_http_client.dart';
 import 'package:billing_baba/features/app_update/data/update_installer_launcher.dart';
 import 'package:billing_baba/features/app_update/domain/app_update_info.dart';
+import 'package:billing_baba/features/app_update/domain/update_version_policy.dart';
 import 'package:billing_baba/features/app_update/domain/install_launch_result.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
@@ -96,7 +97,13 @@ class UpdateService {
 
       final packageInfo = await _resolvePackageInfo();
       final currentBuild = int.tryParse(packageInfo.buildNumber) ?? 0;
-      if (info.latestBuild <= currentBuild) return null;
+      final hasNewerRelease = isRemoteReleaseNewer(
+        remoteVersion: info.latestVersion,
+        remoteBuild: info.latestBuild,
+        currentVersion: packageInfo.version,
+        currentBuild: currentBuild,
+      );
+      if (!hasNewerRelease) return null;
 
       return info;
     } on Object catch (e, st) {

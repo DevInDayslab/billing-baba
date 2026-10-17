@@ -99,6 +99,38 @@ void main() {
       expect(info!.latestBuild, 5);
     });
 
+    test('returns info when semver is newer with lower build', () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      final port = server.port;
+      final installerUrl =
+          'https://127.0.0.1:$port/BillingBabaSetup-v1.0.1.exe';
+      server.listen((request) async {
+        if (request.uri.path == '/version.json') {
+          request.response.write(
+            jsonEncode(manifestJson(
+              version: '1.0.1',
+              latestBuild: 1,
+              installerUrl: installerUrl,
+            )),
+          );
+        } else {
+          request.response.statusCode = HttpStatus.notFound;
+        }
+        await request.response.close();
+      });
+      loadUpdateEnv(
+        manifestUrl: 'http://127.0.0.1:$port/version.json',
+        allowInsecureHttp: true,
+      );
+      final service = UpdateService(
+        packageInfo: testPackageInfo(version: '1.0.0', buildNumber: '2'),
+      );
+      final info = await service.checkForUpdate();
+      await server.close(force: true);
+      expect(info, isNotNull);
+      expect(info!.latestVersion, '1.0.1');
+    });
+
     test('returns null when build is equal or lower', () async {
       final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
       final port = server.port;
@@ -108,6 +140,7 @@ void main() {
         if (request.uri.path == '/version.json') {
           request.response.write(
             jsonEncode(manifestJson(
+              version: '1.0.0',
               latestBuild: 1,
               installerUrl: installerUrl,
             )),
