@@ -104,7 +104,7 @@ When **`apps/client/pubspec.yaml`** changes on **`develop`** or **`main`**:
 
 Watch **Build Demo** on the tag; confirm **Publish update to public hosting** succeeds. Check manifest URL and `https://billingbaba.com/download`.
 
-`UPDATE_MANIFEST_URL` is baked on **tag**, **develop**, and **main** builds (not `demo` branch).
+`UPDATE_MANIFEST_URL` is baked on **tag**, **demo**, **develop**, and **main** builds when the GitHub variable is set. Manifest publish runs on those branch pushes (not only tags) when `UPDATE_DOWNLOAD_BASE_URL` and `UPDATE_MANIFEST_URL` are configured.
 
 ## Rollback
 

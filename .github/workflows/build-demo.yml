@@ -6,10 +6,10 @@
 #   SHA256SUMS.txt                     — checksums for the above
 #
 # Triggers:
-#   Branch push (demo, develop, main)  → build + GitHub Artifacts
+#   Branch push (demo, develop, main)  → build + publish update (when GitHub vars set) + Artifacts
 #   Tag push v*                      → build + publish update + GitHub Release
-#   desktop-auto-tag.yml on develop/main pubspec change → force-pushes v* tag → publish
-#   workflow_dispatch            → build + GitHub Artifacts (Release only when run on a v* tag)
+#   desktop-auto-tag.yml on develop/main pubspec change → force-pushes v* tag (GitHub Release backup)
+#   workflow_dispatch            → build + publish update (when vars set) + Artifacts
 #
 # Re-pushing the same tag updates the existing release; assets with matching names are
 # replaced (softprops/action-gh-release overwrite_files, default true).
@@ -18,7 +18,7 @@
 #   - Windows Authenticode signing (SignTool / certificate)
 #   - MSIX packaging for Microsoft Store distribution
 #
-# Auto-update: public manifest + installer via publish-update.ps1 on v* tags only.
+# Auto-update: public manifest + installer via publish-update.ps1 when UPDATE_* vars are set.
 
 name: Build Demo
 
@@ -26,7 +26,7 @@ on:
   workflow_dispatch:
     inputs:
       force_update:
-        description: "Set force_update in version.json (tag releases only)"
+        description: "Set force_update in version.json when publishing updates"
         type: boolean
         default: false
       min_supported_build:
@@ -98,7 +98,7 @@ jobs:
           DEV_OTP: ${{ vars.DEV_OTP }}
           API_BASE_URL: ${{ vars.API_BASE_URL }}
           WEBSITE_URL: https://billingbaba.com
-          UPDATE_MANIFEST_URL: ${{ (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && vars.UPDATE_MANIFEST_URL || '' }}
+          UPDATE_MANIFEST_URL: ${{ (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/demo' || github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && vars.UPDATE_MANIFEST_URL || '' }}
           MSG91_WIDGET_ID: ${{ secrets.MSG91_WIDGET_ID }}
           MSG91_WIDGET_AUTH_TOKEN: ${{ secrets.MSG91_WIDGET_AUTH_TOKEN }}
         run: bash .github/scripts/setup-flutter-env.sh
@@ -128,7 +128,7 @@ jobs:
             "--dart-define=GIT_COMMIT=${{ github.sha }}"
           )
           $ref = "${{ github.ref }}"
-          $bakeManifest = $ref.StartsWith("refs/tags/v") -or $ref -eq "refs/heads/develop" -or $ref -eq "refs/heads/main"
+          $bakeManifest = $ref.StartsWith("refs/tags/v") -or $ref -eq "refs/heads/demo" -or $ref -eq "refs/heads/develop" -or $ref -eq "refs/heads/main"
           if ($bakeManifest) {
             $manifestUrl = "${{ vars.UPDATE_MANIFEST_URL }}"
             if ($manifestUrl) {
@@ -297,7 +297,7 @@ jobs:
           .\.github\scripts\generate-update-manifest.ps1
 
       - name: Publish update to public hosting
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: vars.UPDATE_DOWNLOAD_BASE_URL != '' && vars.UPDATE_MANIFEST_URL != ''
         shell: pwsh
         working-directory: .
         env:
@@ -311,10 +311,10 @@ jobs:
           UPDATE_DOWNLOAD_BASE_URL: ${{ vars.UPDATE_DOWNLOAD_BASE_URL }}
         run: |
           if (-not $env:UPDATE_DOWNLOAD_BASE_URL) {
-            Write-Error "UPDATE_DOWNLOAD_BASE_URL is required for tag releases"
+            Write-Error "UPDATE_DOWNLOAD_BASE_URL is required to publish updates"
           }
           if (-not $env:UPDATE_MANIFEST_URL) {
-            Write-Error "UPDATE_MANIFEST_URL is required for tag releases"
+            Write-Error "UPDATE_MANIFEST_URL is required to publish updates"
           }
           if (-not (Test-Path dist/version.json)) {
             .\.github\scripts\generate-update-manifest.ps1
@@ -322,7 +322,7 @@ jobs:
           .\.github\scripts\publish-update.ps1
 
       - name: Trigger website redeploy
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: vars.UPDATE_DOWNLOAD_BASE_URL != '' && vars.UPDATE_MANIFEST_URL != ''
         shell: pwsh
         env:
           WEBSITE_DEPLOY_HOOK_URL: ${{ secrets.WEBSITE_DEPLOY_HOOK_URL }}
@@ -342,7 +342,7 @@ jobs:
           }
 
       - name: Prune old update installers
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: vars.UPDATE_DOWNLOAD_BASE_URL != '' && vars.UPDATE_MANIFEST_URL != ''
         shell: pwsh
         working-directory: .
         env:

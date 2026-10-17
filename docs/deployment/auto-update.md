@@ -4,13 +4,13 @@ Billing Baba desktop (Windows) checks a **public** `version.json` manifest hoste
 
 ## Shipping a release
 
-1. Bump **both** semver and build number in [`apps/client/pubspec.yaml`](../../apps/client/pubspec.yaml):
+1. Bump semver and/or build number in [`apps/client/pubspec.yaml`](../../apps/client/pubspec.yaml):
    ```yaml
    version: 1.1.0+2
    ```
-   The updater compares **build numbers** (`+2`). Every release must increment the build.
-2. Commit and push tag `v1.1.0` (semver only in tag name), **or** merge a `pubspec.yaml` bump to `develop`/`main` to auto-tag (see [auto-update-railway.md](auto-update-railway.md)).
-3. The [`build-demo`](../../.github/workflows/build-demo.yml) workflow on `v*` tags:
+   The updater treats a release as newer when **either** semver increases (e.g. `1.0.1` > `1.0.0`) **or** the build number (`+2`) increases. Prefer incrementing both on each ship.
+2. Push to `demo`, `develop`, or `main` (or tag `v1.1.0` for a GitHub Release backup). A `pubspec.yaml` bump on `develop`/`main` can also auto-tag via [auto-update-railway.md](auto-update-railway.md).
+3. The [`build-demo`](../../.github/workflows/build-demo.yml) workflow on those branches (and `v*` tags):
    - Builds `dist/BillingBabaSetup-v1.1.0.exe`
    - Writes `dist/version.json` (when `UPDATE_DOWNLOAD_BASE_URL` is set)
    - Publishes **installer first**, then **`version.json` last** (`publish-update.ps1`)
@@ -18,7 +18,7 @@ Billing Baba desktop (Windows) checks a **public** `version.json` manifest hoste
    - **Prunes** old installers last (`publish-update.ps1 -PruneOnly`; semver-based retention, non-fatal on error)
    - Uploads all `dist/*` assets to the GitHub Release as an internal backup
 
-**Tag-only updater URL:** `UPDATE_MANIFEST_URL` is baked into the desktop app **only** on `v*` tag builds. `develop` / `demo` branch builds do not receive production manifest URLs.
+**Updater URL in builds:** `UPDATE_MANIFEST_URL` is baked into desktop builds from `demo`, `develop`, `main`, and `v*` tag runs (when the GitHub variable is set).
 
 Clients read only the public manifest URL configured as `UPDATE_MANIFEST_URL` on release builds.
 

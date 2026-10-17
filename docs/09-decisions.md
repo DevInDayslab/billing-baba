@@ -1935,3 +1935,31 @@ Users delete invoices, bills, payments, expenses, other income, and loan transac
 
 - Hard-delete finalized documents immediately — rejected (no recovery, higher support risk).
 - Row-only sync deletes for finalized invoices — rejected (cannot safely reverse stock/ledger in row applier alone).
+
+---
+
+## ADR-034: Desktop update version comparison (semver OR build)
+
+| Field | Value |
+|-------|-------|
+| **Date** | 2026-10-17 |
+| **Status** | Accepted |
+
+#### Context
+
+Desktop clients read a public `version.json` manifest. Previously only `latest_build` was compared to the installed build number, so a semver bump with a lower build (e.g. `1.0.1+1` vs installed `1.0.0+2`) never offered an update. CI published manifests only on `v*` tag builds, so branch pushes produced artifacts without updating hosting.
+
+#### Decision
+
+- Treat a manifest as newer when **either** `latest_version` is greater (semver) **or** `latest_build` is greater than the installed build (`update_version_policy.dart`).
+- [`build-demo.yml`](../.github/workflows/build-demo.yml) publishes installer + `version.json` on every run where `UPDATE_DOWNLOAD_BASE_URL` and `UPDATE_MANIFEST_URL` are set (branch pushes to `demo`/`develop`/`main`, tags, and manual dispatch). GitHub Releases remain tag-only.
+
+#### Consequences
+
+- Installed apps on older semver see updates as soon as hosting is updated, without requiring a monotonic build-only bump.
+- Higher build on a lower semver can still trigger an update (rare); ship coherent `version:` lines in `pubspec.yaml`.
+
+#### Alternatives Considered
+
+- Build-only comparison — rejected (semver bumps with reset build numbers).
+- Tag-only publish — rejected (branch CI artifacts did not update the live manifest).
