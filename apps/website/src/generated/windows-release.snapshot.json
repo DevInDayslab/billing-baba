@@ -1,6 +1,4 @@
 {
   "status": "unavailable",
-  "reason": "HTTP 500",
-  "manifestUrl": "https://httpbin.org/status/500",
-  "fetchedAt": "2026-10-17T07:40:38.601Z"
+  "reason": "No release snapshot yet"
 }
