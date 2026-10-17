@@ -244,6 +244,11 @@ class _DesktopAppMenuBarState extends ConsumerState<DesktopAppMenuBar> {
         label: 'Help',
         menus: [
           PlatformMenuItem(
+            label: 'Check for updates…',
+            onSelected: () =>
+                unawaited(DesktopMenuActions.checkForUpdates(ref)),
+          ),
+          PlatformMenuItem(
             label: 'Documentation',
             onSelected: () => unawaited(DesktopMenuActions.openDocumentation()),
           ),

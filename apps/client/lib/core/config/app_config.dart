@@ -5,6 +5,7 @@ import 'package:billing_baba/core/logging/logging_service.dart';
 import 'package:billing_baba/core/platform/app_platform.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:meta/meta.dart';
 
 /// Environment-specific application configuration.
 abstract final class AppConfig {
@@ -108,6 +109,58 @@ abstract final class AppConfig {
     const fromDefine = String.fromEnvironment('GIT_COMMIT');
     if (fromDefine.isNotEmpty) return fromDefine;
     return '(unavailable)';
+  }
+
+  static var _loggedUpdateManifestDisabled = false;
+
+  @visibleForTesting
+  static void resetUpdateManifestDiagnosticsForTest() {
+    _loggedUpdateManifestDisabled = false;
+  }
+
+  @visibleForTesting
+  static String? updateManifestUrlOverride;
+
+  @visibleForTesting
+  static bool? updateManifestAllowInsecureHttpOverride;
+
+  @visibleForTesting
+  static void resetUpdateManifestOverridesForTest() {
+    updateManifestUrlOverride = null;
+    updateManifestAllowInsecureHttpOverride = null;
+    resetUpdateManifestDiagnosticsForTest();
+  }
+
+  /// Public URL of `version.json` for desktop auto-update (HTTPS in production).
+  ///
+  /// `--dart-define=UPDATE_MANIFEST_URL` overrides `.env`. No default — when
+  /// empty the updater disables itself.
+  static String get updateManifestUrl {
+    final override = updateManifestUrlOverride;
+    if (override != null) return override;
+    const fromDefine = String.fromEnvironment('UPDATE_MANIFEST_URL');
+    if (fromDefine.isNotEmpty) return fromDefine.trim();
+    final fromEnv = dotenv.env['UPDATE_MANIFEST_URL']?.trim();
+    if (fromEnv != null && fromEnv.isNotEmpty) return fromEnv;
+    if (!_loggedUpdateManifestDisabled) {
+      _loggedUpdateManifestDisabled = true;
+      LoggingService.instance.info(
+        '[UPDATE] Manifest URL not configured; updater disabled',
+      );
+    }
+    return '';
+  }
+
+  static bool get updateManifestConfigured => updateManifestUrl.isNotEmpty;
+
+  /// Debug-only: allow `http://` manifest URL (never for installer downloads).
+  static bool get updateManifestAllowInsecureHttp {
+    final override = updateManifestAllowInsecureHttpOverride;
+    if (override != null) return override;
+    if (!kDebugMode) return false;
+    const fromDefine = bool.fromEnvironment('UPDATE_MANIFEST_ALLOW_HTTP');
+    if (fromDefine) return true;
+    return dotenv.env['UPDATE_MANIFEST_ALLOW_HTTP']?.toLowerCase() == 'true';
   }
 
   /// Public website base URL used for collaboration invite links.

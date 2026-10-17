@@ -8,6 +8,7 @@ import 'package:billing_baba/core/providers/business_scope_invalidation.dart';
 import 'package:billing_baba/core/routing/app_messenger_key.dart';
 import 'package:billing_baba/core/routing/app_router.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
+import 'package:billing_baba/features/app_update/presentation/app_update_coordinator.dart';
 import 'package:billing_baba/features/business/presentation/desktop/widgets/business_opening_overlay.dart';
 import 'package:billing_baba/features/payments/application/payment_recovery_service.dart';
 import 'package:billing_baba/features/parties/application/party_contact_import_deep_link.dart';
@@ -67,44 +68,46 @@ class _BillingBabaAppState extends ConsumerState<BillingBabaApp> {
     final isSelectingCompany = ref.watch(businessSelectionTransitionProvider);
     final isBlocking = isOpeningCompany || isSelectingCompany;
 
-    return PaymentRecoveryLifecycle(
-      child: MaterialApp.router(
-        title: AppConfig.appName,
-        theme: AppTheme.light,
-        themeMode: ThemeMode.light,
-        scaffoldMessengerKey: rootScaffoldMessengerKey,
-        routerConfig: router,
-        debugShowCheckedModeBanner: false,
-        builder: (context, child) {
-          return DesktopAppMenuBar(
-            key: _desktopMenuKey,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                AppThemeScope(child: child ?? const SizedBox.shrink()),
-                const Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: PaymentRecoveryBanner(),
-                ),
-                if (isBlocking)
-                  Positioned.fill(
-                    child: BusinessOpeningOverlay(
-                      opaque: true,
-                      whiteBackground: true,
-                      message: isOpeningCompany
-                          ? 'Opening company…'
-                          : 'Loading companies…',
-                      subtitle: isOpeningCompany
-                          ? 'Loading dashboard and company data'
-                          : null,
-                    ),
+    return AppUpdateCoordinator(
+      child: PaymentRecoveryLifecycle(
+        child: MaterialApp.router(
+          title: AppConfig.appName,
+          theme: AppTheme.light,
+          themeMode: ThemeMode.light,
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
+          routerConfig: router,
+          debugShowCheckedModeBanner: false,
+          builder: (context, child) {
+            return DesktopAppMenuBar(
+              key: _desktopMenuKey,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  AppThemeScope(child: child ?? const SizedBox.shrink()),
+                  const Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: PaymentRecoveryBanner(),
                   ),
-              ],
-            ),
-          );
-        },
+                  if (isBlocking)
+                    Positioned.fill(
+                      child: BusinessOpeningOverlay(
+                        opaque: true,
+                        whiteBackground: true,
+                        message: isOpeningCompany
+                            ? 'Opening company…'
+                            : 'Loading companies…',
+                        subtitle: isOpeningCompany
+                            ? 'Loading dashboard and company data'
+                            : null,
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

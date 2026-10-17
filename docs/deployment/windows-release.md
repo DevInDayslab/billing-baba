@@ -104,7 +104,7 @@ Push to the `demo` branch (or run the workflow on `demo`). GitHub Releases will 
    ```
 3. The workflow creates release `Billing Baba 1.0.0` with generated release notes
 
-Clients should download **`BillingBabaSetup-v<version>.exe`** from GitHub Releases.
+Production clients receive updates via the public auto-update manifest (see [Auto-update](auto-update.md)). GitHub Releases remain an **internal** backup of `dist/*` (installer, ZIP, checksums, `version.json`).
 
 The portable ZIP remains available for debugging, portable use, and internal testing.
 
@@ -131,9 +131,12 @@ When a code-signing certificate is available, add signing with minimal workflow 
 
 Placeholder comments in the workflow and `.iss` file mark where signing hooks belong.
 
-## Future: Auto-Updater and MSIX
+## Auto-update
 
-Not implemented yet. The current layout keeps the installer and versioned filenames stable so these can be added later:
+Windows desktop auto-update is documented in [auto-update.md](auto-update.md).
 
-- **Auto-updater** — e.g. query GitHub Releases API for `v*` tags, compare semver, download new `BillingBabaSetup-v*.exe`
+## Future: MSIX
+
+Not implemented yet:
+
 - **MSIX** — separate packaging step after the Flutter build for Microsoft Store distribution

@@ -3,18 +3,24 @@ import 'dart:ui';
 import 'package:billing_baba/core/config/app_config.dart';
 import 'package:billing_baba/core/theme/app_theme.dart';
 import 'package:billing_baba/core/theme/list_panel_theme.dart';
+import 'package:billing_baba/features/app_update/application/update_controller.dart';
+import 'package:billing_baba/features/app_update/application/update_state.dart';
+import 'package:billing_baba/features/app_update/presentation/update_dialog.dart';
 import 'package:billing_baba/shared/widgets/legal/legal_consent_footer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 /// Premium, minimal About tab — identity and technical metadata only.
-class AboutSettingsTab extends StatelessWidget {
+class AboutSettingsTab extends ConsumerWidget {
   const AboutSettingsTab({super.key});
 
   static const _tagline = 'Professional retail management';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final updateState = ref.watch(updateControllerProvider);
+
     return FutureBuilder<PackageInfo>(
       future: PackageInfo.fromPlatform(),
       builder: (context, snapshot) {
@@ -98,6 +104,29 @@ class AboutSettingsTab extends StatelessWidget {
                               ),
                             ],
                           ),
+                          const SizedBox(height: AppSpacing.lg),
+                          _AboutUpdateSection(
+                            updateState: updateState,
+                            onCheck: () async {
+                              if (!AppConfig.updateManifestConfigured) return;
+                              await ref
+                                  .read(updateControllerProvider.notifier)
+                                  .checkManually();
+                              final next = ref.read(updateControllerProvider);
+                              if (next.status == UpdateStatus.updateAvailable) {
+                                showUpdateDialog(isForced: next.isForced);
+                              } else if (next.status == UpdateStatus.upToDate) {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "You're up to date (v$version)",
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                           const SizedBox(height: AppSpacing.xl),
                           const LegalDocumentLinksRow(),
                           const SizedBox(height: AppSpacing.lg),
@@ -122,6 +151,44 @@ class AboutSettingsTab extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _AboutUpdateSection extends StatelessWidget {
+  const _AboutUpdateSection({
+    required this.updateState,
+    required this.onCheck,
+  });
+
+  final UpdateState updateState;
+  final VoidCallback onCheck;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!AppConfig.updateManifestConfigured) {
+      return Text(
+        'Updates are not configured',
+        textAlign: TextAlign.center,
+        style: AppTypography.inter(
+          fontSize: AppTypography.bodySmallSize,
+          color: AppColors.textSecondary,
+        ),
+      );
+    }
+
+    final checking = updateState.status == UpdateStatus.checking;
+
+    return TextButton.icon(
+      onPressed: checking ? null : onCheck,
+      icon: checking
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.system_update_alt_outlined, size: 18),
+      label: Text(checking ? 'Checking for updates…' : 'Check for updates'),
     );
   }
 }
