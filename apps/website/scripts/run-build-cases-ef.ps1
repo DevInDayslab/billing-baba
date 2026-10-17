@@ -1,6 +1,9 @@
 # Manual build cases (e)-(f): invalid JSON and host mismatch via local HTTP server.
 $ErrorActionPreference = "Stop"
 $website = Split-Path $PSScriptRoot -Parent
+$snapshotPath = Join-Path $website "src\generated\windows-release.snapshot.json"
+$originalSnapshot = Get-Content -Raw $snapshotPath
+
 $job = Start-Job -ScriptBlock {
   param($root)
   Set-Location $root
@@ -33,22 +36,26 @@ HTTPServer(('127.0.0.1', 8765), H).serve_forever()
 
 Start-Sleep -Seconds 2
 
-function Run-Case([string]$label, [string]$url) {
-  $env:WEBSITE_UPDATE_MANIFEST_URL = $url
-  Push-Location $website
-  bun run scripts/fetch-windows-release.ts
-  $code = $LASTEXITCODE
-  Write-Host "--- snapshot for $label (fetch exit $code) ---"
-  Get-Content src/generated/windows-release.snapshot.json
-  bun run build
-  $buildCode = $LASTEXITCODE
-  Pop-Location
-  if ($buildCode -ne 0) { throw "Build failed for $label" }
-  Write-Host "PASS $label build exit $buildCode"
+try {
+  function Run-Case([string]$label, [string]$url) {
+    $env:WEBSITE_UPDATE_MANIFEST_URL = $url
+    Push-Location $website
+    bun run scripts/fetch-windows-release.ts
+    $code = $LASTEXITCODE
+    Write-Host "--- snapshot for $label (fetch exit $code) ---"
+    Get-Content src/generated/windows-release.snapshot.json
+    bun run build
+    $buildCode = $LASTEXITCODE
+    Pop-Location
+    if ($buildCode -ne 0) { throw "Build failed for $label" }
+    Write-Host "PASS $label build exit $buildCode"
+  }
+
+  Run-Case "(e) invalid JSON" "http://127.0.0.1:8765/bad.json"
+  Run-Case "(f) host mismatch" "http://127.0.0.1:8765/mismatch.json"
 }
-
-Run-Case "(e) invalid JSON" "http://127.0.0.1:8765/bad.json"
-Run-Case "(f) host mismatch" "http://127.0.0.1:8765/mismatch.json"
-
-Stop-Job $job -ErrorAction SilentlyContinue
-Remove-Job $job -Force -ErrorAction SilentlyContinue
+finally {
+  Set-Content -Path $snapshotPath -Value $originalSnapshot -NoNewline
+  Stop-Job $job -ErrorAction SilentlyContinue
+  Remove-Job $job -Force -ErrorAction SilentlyContinue
+}

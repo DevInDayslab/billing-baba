@@ -4,9 +4,11 @@
  */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const websiteRoot = join(import.meta.dir, '..');
+const snapshotPath = join(websiteRoot, 'src/generated/windows-release.snapshot.json');
 
 function runBuild(label: string, manifestUrl: string | null) {
   return new Promise<void>((resolve, reject) => {
@@ -52,24 +54,29 @@ async function withServer(
 }
 
 async function main() {
-  await runBuild('(a) WEBSITE_UPDATE_MANIFEST_URL unset', null);
-  await runBuild('(b) empty manifest URL', '');
+  const originalSnapshot = await readFile(snapshotPath, 'utf8');
+  try {
+    await runBuild('(a) WEBSITE_UPDATE_MANIFEST_URL unset', null);
+    await runBuild('(b) empty manifest URL', '');
 
-  await withServer((_req, res) => {
-    res.statusCode = 404;
-    res.end('not found');
-  }, async (port) => {
-    await runBuild('(c) manifest 404', `http://127.0.0.1:${port}/version.json`);
-  });
+    await withServer((_req, res) => {
+      res.statusCode = 404;
+      res.end('not found');
+    }, async (port) => {
+      await runBuild('(c) manifest 404', `http://127.0.0.1:${port}/version.json`);
+    });
 
-  await withServer((_req, res) => {
-    res.statusCode = 500;
-    res.end('error');
-  }, async (port) => {
-    await runBuild('(d) manifest 500', `http://127.0.0.1:${port}/version.json`);
-  });
+    await withServer((_req, res) => {
+      res.statusCode = 500;
+      res.end('error');
+    }, async (port) => {
+      await runBuild('(d) manifest 500', `http://127.0.0.1:${port}/version.json`);
+    });
 
-  console.log('All automated build-resilience cases passed.');
+    console.log('All automated build-resilience cases passed.');
+  } finally {
+    await writeFile(snapshotPath, originalSnapshot, 'utf8');
+  }
 }
 
 main().catch((e) => {
